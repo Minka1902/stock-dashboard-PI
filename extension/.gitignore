@@ -1,6 +1,0 @@
-node_modules
-dist-chrome
-dist-firefox
-.vite
-*.local
-*.zip

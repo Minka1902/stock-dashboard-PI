@@ -1,0 +1,22 @@
+.bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--s-2) var(--s-3);
+  padding: var(--s-2) var(--s-4);
+  background: var(--caution-weak);
+  border-bottom: 2px solid var(--caution);
+}
+.badge {
+  font-family: var(--mono);
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  padding: 2px 10px;
+  border-radius: var(--r-xs);
+  background: var(--caution);
+  color: var(--bg);
+}
+.text { flex: 1 1 280px; font-size: 12.5px; }
+
+@media (max-width: 640px) { .bar { padding-inline: var(--s-3); } }

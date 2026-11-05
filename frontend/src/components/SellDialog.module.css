@@ -1,0 +1,23 @@
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-3);
+}
+.check {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  font-size: 13px;
+  color: var(--text-muted);
+  min-height: 32px;
+}
+.preview {
+  font-family: var(--mono);
+  font-size: 14px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+.preview[data-tone="pos"] { color: var(--positive); }
+.preview[data-tone="neg"] { color: var(--negative); }
+.basis { font-size: 12px; font-weight: 400; color: var(--text-faint); }
+.error { color: var(--negative); font-size: 12.5px; }

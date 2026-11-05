@@ -1,0 +1,55 @@
+/* The wrapper stretches like the text input it sits beside. */
+.select {
+  display: flex;
+  width: 100%;
+}
+
+/* MenuButton's trigger is a fixed 24x24 box built for a "⋯" glyph; as a
+   select it has to look like the neighbouring .input fields instead. */
+.select > button {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s-2);
+  width: 100%;
+  height: 38px;
+  padding: 0 10px 0 12px;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--r-sm);
+  background: var(--bg);
+  color: var(--text);
+  font: inherit;
+  font-size: 14px;
+  text-align: left;
+}
+.select > button:hover {
+  color: var(--text);
+  background: var(--surface-2);
+  border-color: var(--border-strong);
+}
+.select > button[aria-expanded="true"] {
+  color: var(--text);
+  background: var(--bg);
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-weak);
+}
+
+.value {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.chevron {
+  flex: none;
+  color: var(--text-muted);
+  transition: transform var(--dur-1) ease;
+}
+.select > button[aria-expanded="true"] .chevron {
+  transform: rotate(180deg);
+  color: var(--accent-text);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .chevron { transition: none; }
+}

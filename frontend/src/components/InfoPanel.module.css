@@ -1,0 +1,262 @@
+.panel {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  box-shadow: var(--shadow);
+  overflow: hidden;
+}
+
+.head {
+  padding: var(--s-5);
+  border-bottom: 1px solid var(--border);
+}
+
+.title {
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.subtitle {
+  margin-top: 4px;
+  color: var(--text-muted);
+  font-size: 12.5px;
+  max-width: 72ch;
+}
+
+/* Sticky in-page section nav */
+.sectionNav {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  display: flex;
+  gap: var(--s-2);
+  padding: var(--s-3) var(--s-5);
+  border-bottom: 1px solid var(--border);
+  background: color-mix(in oklab, var(--surface) 92%, transparent);
+  backdrop-filter: blur(6px);
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-2);
+  padding: 6px 14px;
+  border-radius: var(--r-pill);
+  border: 1px solid var(--border);
+  background: var(--surface-2);
+  color: var(--text-muted);
+  font: inherit;
+  font-size: 12.5px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: border-color 0.12s ease, color 0.12s ease, background 0.12s ease;
+}
+.chip:hover,
+.chip[data-active="yes"] {
+  border-color: var(--accent);
+  color: var(--accent-text);
+  background: var(--accent-weak);
+}
+/* "Update available" marker on the Updates chip. */
+.chipDot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-weak);
+}
+
+.chip:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.body {
+  padding: var(--s-5);
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-6);
+}
+
+.section {
+  scroll-margin-top: 56px; /* clear the sticky section nav on anchor scroll */
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-5);
+}
+
+.sectionTitle {
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.intro {
+  padding: var(--s-4) var(--s-5);
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  background: var(--accent-weak);
+}
+
+.introTitle {
+  font-size: 14px;
+  font-weight: 700;
+  margin-bottom: var(--s-2);
+}
+
+.introText {
+  color: var(--text-muted);
+  font-size: 13px;
+  max-width: 78ch;
+}
+
+.group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-4);
+}
+
+.groupTitle {
+  font-size: 13px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-faint);
+}
+
+.cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: var(--s-4);
+}
+
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-2);
+  padding: var(--s-4);
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  background: var(--surface-2);
+  text-align: left;
+  font: inherit;
+  color: var(--text);
+  cursor: pointer;
+  transition: border-color 0.12s ease, transform 0.12s ease;
+}
+.card:hover {
+  border-color: var(--accent);
+  transform: translateY(-2px);
+}
+
+.cardHead {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+}
+
+.cardIcon {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border-radius: var(--r-sm);
+  background: var(--accent-weak);
+  color: var(--accent-text);
+  flex: none;
+}
+
+.cardName {
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.what {
+  color: var(--text);
+  font-size: 13px;
+}
+
+.why {
+  color: var(--text-muted);
+  font-size: 12.5px;
+}
+
+.signal {
+  margin-top: 2px;
+  align-self: flex-start;
+  padding: 4px 10px;
+  border-radius: var(--r-pill);
+  background: var(--accent-weak);
+  color: var(--accent-text);
+  font-size: 11.5px;
+  font-weight: 600;
+}
+
+.cardSource {
+  margin-top: auto;
+  padding-top: var(--s-2);
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  font-size: 11.5px;
+  color: var(--text-muted);
+  border-top: 1px solid var(--border);
+}
+
+.sourceDot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  flex: none;
+  background: var(--text-faint);
+}
+
+.cardSource[data-state="ok"] .sourceDot {
+  background: var(--positive);
+  box-shadow: 0 0 0 3px var(--positive-weak);
+}
+
+.cardSource[data-state="error"] .sourceDot {
+  background: var(--negative);
+  box-shadow: 0 0 0 3px var(--negative-weak);
+}
+
+.cardSource[data-state="deferred"] .sourceDot {
+  background: var(--caution);
+  box-shadow: 0 0 0 3px var(--caution-weak);
+}
+
+.glossary {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-4);
+}
+
+.term {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.termLabel {
+  font-weight: 700;
+  font-size: 13.5px;
+  color: var(--text);
+}
+
+.termDef {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 12.5px;
+  max-width: 78ch;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .card,
+  .chip {
+    transition: none;
+  }
+  .card:hover {
+    transform: none;
+  }
+}

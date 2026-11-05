@@ -1,0 +1,120 @@
+.list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-2);
+}
+
+.item {
+  display: flex;
+  gap: var(--s-3);
+  padding: var(--s-3);
+  border: 1px solid var(--grid);
+  border-radius: var(--r-sm);
+  background: var(--surface-2);
+}
+/* Unread alerts carry a little more weight; read ones recede rather than vanish. */
+.item[data-read="yes"] { opacity: 0.72; }
+
+/* The alert you followed to get here. Arriving at a long page with no marker
+   leaves you hunting for the one you clicked. Full opacity even though
+   following the link marks it read. */
+.item[data-focused="yes"] {
+  opacity: 1;
+  border-color: var(--accent);
+  background: var(--accent-weak);
+  animation: alertPulse 1.6s ease-out 1;
+}
+@keyframes alertPulse {
+  0%   { box-shadow: 0 0 0 0 var(--accent-weak); }
+  35%  { box-shadow: 0 0 0 5px var(--accent-weak); }
+  100% { box-shadow: 0 0 0 0 transparent; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .item[data-focused="yes"] { animation: none; }
+}
+
+.severity {
+  flex: none;
+  width: 3px;
+  border-radius: 2px;
+  background: var(--text-faint);
+}
+.severity[data-sev="high"]   { background: var(--negative); }
+.severity[data-sev="medium"] { background: var(--accent); }
+
+.body { min-width: 0; flex: 1; display: flex; flex-direction: column; gap: 4px; }
+
+.top {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  flex-wrap: wrap;
+}
+.title { font-weight: 600; font-size: 13px; }
+.type {
+  font-family: var(--mono);
+  font-size: 9.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-faint);
+  border: 1px solid var(--grid);
+  border-radius: var(--r-xs);
+  padding: 1px 5px;
+}
+.time { margin-left: auto; font-family: var(--mono); font-size: 10.5px; color: var(--text-faint); }
+.unread {
+  font-family: var(--mono);
+  font-size: 9px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--accent-text);
+  background: var(--accent-weak);
+  border-radius: var(--r-xs);
+  padding: 1px 5px;
+}
+
+.message { font-size: 12.5px; color: var(--text-muted); line-height: 1.5; }
+
+.explainBtn {
+  appearance: none;
+  align-self: flex-start;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  border: none;
+  background: none;
+  padding: 2px 0;
+  color: var(--accent-text);
+  font-family: var(--mono);
+  font-size: 10.5px;
+  cursor: pointer;
+}
+.explainBtn:hover { text-decoration: underline; }
+.explainBtn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: var(--r-xs); }
+
+.explain { overflow: hidden; }
+.explain p {
+  font-size: 12px;
+  color: var(--text-muted);
+  line-height: 1.55;
+  margin-top: 4px;
+}
+.explainLabel {
+  display: inline-block;
+  min-width: 46px;
+  font-family: var(--mono);
+  font-size: 9.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: var(--text-faint);
+}
+
+.empty {
+  font-size: 12.5px;
+  color: var(--text-faint);
+  line-height: 1.55;
+}

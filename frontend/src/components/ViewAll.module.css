@@ -1,0 +1,31 @@
+.viewAll {
+  flex: none;
+  margin-left: auto;      /* push to the far right of the panel header */
+  align-self: center;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 8px;
+  border: none;
+  background: transparent;
+  border-radius: var(--r-sm);
+  color: var(--accent-text);
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background 0.12s ease, color 0.12s ease;
+}
+
+.viewAll:hover {
+  background: var(--accent-weak);
+}
+
+.viewAll span {
+  transition: transform 0.12s ease;
+}
+
+.viewAll:hover span {
+  transform: translateX(2px);
+}

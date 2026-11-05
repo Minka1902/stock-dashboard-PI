@@ -1,0 +1,18 @@
+.cell { display: inline-flex; align-items: center; gap: var(--s-2); justify-content: flex-end; }
+.value { font-variant-numeric: tabular-nums; min-width: 5ch; text-align: right; }
+.value[data-tone="pos"] { color: var(--positive); }
+.value[data-tone="neg"] { color: var(--negative); }
+.track {
+  position: relative;
+  display: inline-block;
+  width: 72px;
+  height: 8px;
+  border-radius: var(--r-pill);
+  background: var(--surface-2);
+  border: 1px solid var(--grid);
+}
+.half { position: absolute; left: 50%; top: -2px; bottom: -2px; width: 1px; background: var(--text-faint); }
+.band { position: absolute; top: 1px; bottom: 1px; border-radius: var(--r-pill); background: var(--accent-weak); }
+.mark { position: absolute; top: -2px; bottom: -2px; width: 2px; margin-left: -1px; background: var(--accent); }
+.thin { font-size: 11px; color: var(--text-faint); white-space: nowrap; }
+.unknown { color: var(--text-faint); }

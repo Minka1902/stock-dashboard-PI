@@ -1,0 +1,79 @@
+.root { container-type: inline-size; }
+.wrap { overflow-x: auto; }
+.empty {
+  padding: var(--s-3) var(--s-4);
+  font-size: 12.5px;
+  color: var(--text-faint);
+}
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-family: var(--mono);
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+}
+.table th {
+  text-align: left;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: var(--text-faint);
+  background: var(--surface-2);
+  padding: 6px var(--s-3);
+  white-space: nowrap;
+  border-bottom: 1px solid var(--border);
+}
+.table td {
+  padding: 7px var(--s-3);
+  border-top: 1px solid var(--grid);
+  vertical-align: top;
+  white-space: nowrap;
+}
+.num { text-align: right; }
+.table td.reason {
+  white-space: normal;
+  min-width: 260px;
+  font-family: var(--sans);
+  font-size: 12.5px;
+  color: var(--text-muted);
+}
+.kind {
+  display: inline-block;
+  padding: 1px 7px;
+  border-radius: var(--r-xs);
+  border: 1px solid var(--border);
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-muted);
+}
+.kind[data-kind="buy"] { color: var(--positive); border-color: var(--positive-weak); }
+.kind[data-kind="sell"] { color: var(--negative); border-color: var(--negative-weak); }
+.kind[data-kind="error"] { color: var(--negative); background: var(--negative-weak); }
+.kind[data-kind="skip"] { color: var(--caution); border-color: var(--caution-weak); }
+
+/* Narrow (a phone, or inside a bot card): each event is a small card —
+   action / ticker / qty / price on one line, the reason underneath. */
+@container (max-width: 560px) {
+  .wrap { overflow: visible; }
+  .table thead { display: none; }
+  .table, .table tbody { display: block; }
+  .table tr {
+    display: grid;
+    grid-template-columns: auto auto 1fr auto;
+    grid-template-areas: "kind ticker qty price" "reason reason reason reason" "at at at at";
+    column-gap: var(--s-2);
+    row-gap: 3px;
+    padding: var(--s-2) var(--s-3);
+    border-top: 1px solid var(--grid);
+  }
+  .table td { padding: 0; border: none; }
+  .table td[data-col="at"] { grid-area: at; font-size: 10.5px; color: var(--text-faint); }
+  .table td[data-col="kind"] { grid-area: kind; }
+  .table td[data-col="ticker"] { grid-area: ticker; font-weight: 700; }
+  .table td[data-col="qty"] { grid-area: qty; }
+  .table td[data-col="price"] { grid-area: price; }
+  .table td.reason { grid-area: reason; min-width: 0; }
+}

@@ -1,0 +1,10 @@
+/* Symbols are short and fixed-width; company names are neither. Only the name
+   variant gets the clamp, so ticker layouts are completely unaffected. */
+.label[data-name="yes"] {
+  display: inline-block;
+  max-width: 22ch;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  vertical-align: bottom;
+}

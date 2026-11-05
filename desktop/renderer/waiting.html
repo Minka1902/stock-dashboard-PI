@@ -1,0 +1,139 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta http-equiv="Content-Security-Policy"
+        content="default-src 'none'; style-src 'unsafe-inline'; script-src 'unsafe-inline'" />
+  <title>Signal</title>
+  <style>
+    /* Standalone on purpose: this page must render before the backend exists,
+       so it borrows the Iris Dusk palette by value rather than importing the
+       app's tokens from a server that may be down. */
+    :root {
+      --bg: #12101c;
+      --panel: #1a1727;
+      --text: #e8e6f0;
+      --muted: #9a94b8;
+      --accent: #8b7cf6;
+      --border: #2a2540;
+      --danger: #f07a8a;
+    }
+    * { box-sizing: border-box; }
+    html, body { height: 100%; margin: 0; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font: 15px/1.6 "Segoe UI", system-ui, -apple-system, sans-serif;
+      display: grid;
+      place-items: center;
+      padding: 2rem;
+      -webkit-user-select: none;
+      user-select: none;
+    }
+    .card {
+      width: min(30rem, 100%);
+      text-align: center;
+    }
+    .mark {
+      width: 3rem; height: 3rem;
+      margin: 0 auto 1.25rem;
+      border-radius: 0.9rem;
+      background: linear-gradient(135deg, var(--accent), #5b8def);
+    }
+    h1 { font-size: 1.35rem; font-weight: 600; margin: 0 0 0.4rem; letter-spacing: -0.01em; }
+    p { color: var(--muted); margin: 0 0 0.5rem; }
+    .spinner {
+      width: 1.6rem; height: 1.6rem;
+      margin: 1.5rem auto 0;
+      border: 2px solid var(--border);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    @media (prefers-reduced-motion: reduce) {
+      .spinner { animation-duration: 2.4s; }
+    }
+    .actions {
+      display: flex; gap: 0.6rem; justify-content: center; flex-wrap: wrap;
+      margin-top: 1.5rem;
+    }
+    button {
+      font: inherit;
+      color: var(--text);
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 0.55rem;
+      padding: 0.5rem 0.95rem;
+      cursor: pointer;
+    }
+    button:hover { border-color: var(--accent); }
+    button.primary { background: var(--accent); border-color: var(--accent); color: #14121f; font-weight: 600; }
+    .detail {
+      margin-top: 1.5rem;
+      padding-top: 1rem;
+      border-top: 1px solid var(--border);
+      font-size: 0.85rem;
+      color: var(--muted);
+      word-break: break-all;
+    }
+    .hidden { display: none; }
+    .bad { color: var(--danger); }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="mark"></div>
+
+    <div id="starting">
+      <h1>Starting Signal</h1>
+      <p>Waiting for the backend service to answer&hellip;</p>
+      <div class="spinner"></div>
+    </div>
+
+    <div id="down" class="hidden">
+      <h1>Backend unreachable</h1>
+      <p id="downDetail">The dashboard service isn't responding.</p>
+      <div class="actions">
+        <button class="primary" id="retry">Retry</button>
+        <button id="restart">Restart service&hellip;</button>
+        <button id="logs">Open logs</button>
+      </div>
+      <div class="detail">
+        <div id="serviceState"></div>
+        <div id="origin"></div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const api = window.signalDesktop;
+    const el = (id) => document.getElementById(id);
+
+    const SERVICE_TEXT = {
+      running: "The Windows service is running but not serving yet — it may still be starting up.",
+      stopped: "The Windows service is stopped.",
+      pending: "The Windows service is still starting.",
+      absent:  "The Windows service is not installed. Run windows\\install-service.ps1 from an elevated PowerShell.",
+      unknown: "Could not determine the service state.",
+    };
+
+    api.onHealth((state) => {
+      const starting = state.state === "starting";
+      el("starting").classList.toggle("hidden", !starting);
+      el("down").classList.toggle("hidden", starting);
+      if (starting) return;
+
+      el("serviceState").textContent = SERVICE_TEXT[state.service] || SERVICE_TEXT.unknown;
+      el("serviceState").className = state.service === "running" ? "" : "bad";
+      el("origin").textContent = state.origin ? `Expected at ${state.origin}` : "";
+      // Restarting a service you don't have is not a useful offer.
+      el("restart").classList.toggle("hidden", state.service === "absent");
+    });
+
+    el("retry").addEventListener("click", () => api.retry());
+    el("restart").addEventListener("click", () => api.restartService());
+    el("logs").addEventListener("click", () => api.openLogs());
+  </script>
+</body>
+</html>

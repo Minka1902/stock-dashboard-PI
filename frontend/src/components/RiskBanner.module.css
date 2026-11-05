@@ -1,0 +1,18 @@
+.banner {
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+  margin-bottom: var(--s-3);
+  padding: var(--s-2) var(--s-3);
+  border: 1px solid var(--negative);
+  border-radius: var(--r-md);
+  background: var(--negative-weak);
+  color: var(--text);
+}
+.banner svg { flex: none; color: var(--negative); }
+.text { flex: 1; font-size: 13px; }
+.text strong { font-family: var(--mono); color: var(--negative); }
+
+@media (max-width: 640px) {
+  .banner { flex-wrap: wrap; }
+}

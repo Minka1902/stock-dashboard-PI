@@ -1,0 +1,26 @@
+.tiles {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+  gap: var(--s-2);
+  margin: 0;
+}
+.tile {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: var(--s-2) var(--s-3);
+  border: 1px solid var(--grid);
+  border-radius: var(--r-sm);
+}
+.tile dt {
+  font-family: var(--mono);
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: var(--text-faint);
+}
+.tile dd { margin: 0; font-family: var(--mono); font-size: 16px; font-weight: 700; font-variant-numeric: tabular-nums; }
+.tile dd[data-tone="pos"] { color: var(--positive); }
+.tile dd[data-tone="neg"] { color: var(--negative); }
+.tile dd[data-tone="none"] { color: var(--text-faint); font-weight: 400; }

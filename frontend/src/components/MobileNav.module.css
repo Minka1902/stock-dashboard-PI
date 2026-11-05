@@ -1,0 +1,95 @@
+.bar { display: none; }
+
+@media (max-width: 640px) {
+  .bar {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: var(--z-raised);
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    height: calc(var(--mobile-nav-h) + env(safe-area-inset-bottom, 0px));
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+    background: var(--surface);
+    border-top: 1px solid var(--border);
+  }
+}
+
+.tab {
+  appearance: none;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  min-width: 0;
+  border: none;
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+}
+.tab[data-active="yes"] { color: var(--accent-text); }
+/* Amber top tick — the rail's left tick, turned for a bottom bar. */
+.tab[data-active="yes"]::before {
+  content: "";
+  position: absolute;
+  top: -1px;
+  left: 22%;
+  right: 22%;
+  height: 2px;
+  border-radius: var(--r-pill);
+  background: var(--accent);
+  box-shadow: 0 0 10px var(--accent-glow);
+}
+.tab:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+.label {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  /* Sans, not mono: mono is too wide for "Suggestions" in a sixth of a phone. */
+  font-family: var(--sans);
+  font-size: 10.5px;
+  font-weight: 600;
+}
+
+.list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+}
+.row {
+  appearance: none;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  grid-template-rows: auto auto;
+  column-gap: var(--s-3);
+  align-items: center;
+  width: 100%;
+  min-height: 52px;
+  padding: var(--s-2) var(--s-2);
+  border: none;
+  border-bottom: 1px solid var(--grid);
+  background: transparent;
+  color: var(--text-muted);
+  text-align: left;
+  cursor: pointer;
+}
+.row svg { grid-row: 1 / 3; }
+.row[data-active="yes"] { color: var(--accent-text); }
+.rowLabel {
+  font-family: var(--mono);
+  font-size: 14px;
+  font-weight: 600;
+}
+.rowHint {
+  font-family: var(--mono);
+  font-size: 10.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-faint);
+}

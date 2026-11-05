@@ -1,0 +1,17 @@
+.frame { position: relative; }
+.frame::before,
+.frame::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 28px;
+  z-index: var(--z-raised);
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity var(--dur-2) var(--ease-out-quart);
+}
+.frame::before { left: 0; background: linear-gradient(to right, var(--surface), transparent); }
+.frame::after { right: 0; background: linear-gradient(to left, var(--surface), transparent); }
+.frame[data-left="yes"]::before,
+.frame[data-right="yes"]::after { opacity: 1; }

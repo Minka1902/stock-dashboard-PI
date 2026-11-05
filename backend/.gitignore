@@ -1,0 +1,17 @@
+.venv/
+__pycache__/
+*.pyc
+*.db
+*.db-shm
+*.db-wal
+# Manual backups taken before destructive migrations (stocks.db.bak-<stamp>)
+*.db.bak-*
+*.log
+# Rotating handler output, incl. the backend.log.1 … .5 backups that *.log misses
+logs/
+.pytest_cache/
+
+# Secrets — never commit real env files (.env.example is safe)
+.env
+.env.*
+!.env.example

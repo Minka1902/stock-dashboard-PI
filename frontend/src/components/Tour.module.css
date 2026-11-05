@@ -1,0 +1,116 @@
+.layer {
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-tour);
+}
+
+.backdrop {
+  position: absolute;
+  inset: 0;
+}
+
+/* Spotlight: one element whose enormous box-shadow dims everything around it. */
+.spot {
+  position: fixed;
+  border-radius: var(--r-md);
+  box-shadow: 0 0 0 9999px var(--scrim-strong);
+  border: 1px solid var(--accent);
+  pointer-events: none;
+  transition: top var(--dur-3) var(--ease-out-expo),
+    left var(--dur-3) var(--ease-out-expo),
+    width var(--dur-3) var(--ease-out-expo),
+    height var(--dur-3) var(--ease-out-expo);
+}
+
+.layer[data-reduced="on"] .spot { transition: none; }
+
+/* Full dim for target-less (intro) steps. */
+.dim {
+  position: absolute;
+  inset: 0;
+  background: var(--scrim-strong);
+  pointer-events: none;
+}
+
+.card {
+  position: fixed;
+  background: var(--surface);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--r-md);
+  box-shadow: var(--shadow);
+  padding: var(--s-4);
+  outline: none;
+}
+
+.cardCentered {
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: min(380px, calc(100vw - 24px));
+}
+
+.count {
+  color: var(--text-faint);
+  font-size: 0.72em;
+  letter-spacing: var(--caption-spacing);
+  margin-bottom: var(--s-1);
+}
+
+.title {
+  margin: 0 0 var(--s-2);
+  font-size: 1em;
+  color: var(--accent-text);
+}
+
+.body {
+  margin: 0 0 var(--s-3);
+  color: var(--text-muted);
+  font-size: 0.9em;
+  line-height: 1.55;
+}
+
+.controls {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+}
+
+.controlSpacer { flex: 1; }
+
+.skip {
+  background: none;
+  border: 0;
+  color: var(--text-faint);
+  font: inherit;
+  font-size: 0.82em;
+  cursor: pointer;
+  padding: var(--s-1) 0;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.skip:hover { color: var(--text); }
+
+.nav,
+.navPrimary {
+  font: inherit;
+  font-size: 0.88em;
+  border-radius: var(--r-sm);
+  padding: var(--s-1) var(--s-3);
+  cursor: pointer;
+}
+
+.nav {
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  color: var(--text);
+}
+
+.navPrimary {
+  background: var(--accent);
+  border: 1px solid var(--accent);
+  color: var(--on-accent);
+  font-weight: 700;
+}
+
+.navPrimary:hover { background: var(--accent-strong); }

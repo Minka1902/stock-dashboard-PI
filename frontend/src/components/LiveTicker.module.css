@@ -1,0 +1,96 @@
+.tape {
+  display: flex;
+  align-items: center;
+  overflow: hidden;
+  border-top: 1px solid var(--grid);
+  padding: 6px 0;
+}
+
+/* Freshness stamp pinned left of the scrolling tape. */
+.asOf {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.05em;
+  color: var(--text-faint);
+  padding: 0 10px;
+  border-right: 1px solid var(--grid);
+  margin-right: 10px;
+}
+.dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--text-faint);
+}
+.asOf[data-state="LIVE"] .dot { background: var(--positive); }
+.asOf[data-state="PRE"] .dot,
+.asOf[data-state="POST"] .dot { background: var(--accent); }
+
+.trackWrap {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  -webkit-mask-image: linear-gradient(90deg, transparent, #000 3%, #000 97%, transparent);
+  mask-image: linear-gradient(90deg, transparent, #000 3%, #000 97%, transparent);
+}
+
+.track {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-5);
+  white-space: nowrap;
+  will-change: transform;
+  cursor: grab;
+}
+.track:active { cursor: grabbing; }
+/* Static (reduced-motion) variant: no transform, natively scrollable. */
+.trackWrap[data-static="yes"] { overflow-x: auto; }
+.trackWrap[data-static="yes"] .track { cursor: auto; }
+
+.item {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 8px;
+  font-family: var(--mono);
+  font-size: 12px;
+}
+
+.symbol {
+  font-weight: 700;
+  color: var(--text);
+  letter-spacing: 0.02em;
+}
+.price {
+  color: var(--text-muted);
+}
+.change {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 3px;
+  font-weight: 600;
+}
+.change[data-tone="pos"] { color: var(--positive); }
+.change[data-tone="neg"] { color: var(--negative); }
+.change[data-tone="flat"] { color: var(--text-faint); }
+.arrow { font-size: 9px; }
+
+.badge {
+  font-size: 9px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--accent-text);
+  border: 1px solid var(--accent-weak);
+  border-radius: var(--r-xs);
+  padding: 1px 4px;
+}
+
+/* Reduce-motion is handled in JS (LiveTicker renders a static, natively
+   scrollable variant via [data-static]); this is a defensive fallback for the
+   OS-level preference in case the JS branch is bypassed. */
+@media (prefers-reduced-motion: reduce) {
+  .trackWrap { overflow-x: auto; }
+}

@@ -1,0 +1,24 @@
+# Playwright / browser-driven test artifacts
+.playwright-mcp/
+
+# Per-machine Claude Code settings. The skills under .claude/skills/ ARE tracked —
+# CLAUDE.md points at them as the canonical checklists.
+.claude/settings.local.json
+
+# Launcher bookkeeping: pid files for -Stop, and redirected child output.
+.run/
+logs/
+
+# Windows service: the downloaded NSSM binary, and the secrets file
+# (service.env.example is the tracked template).
+windows/nssm/
+windows/service.env
+
+# SignalSetup.exe build: the CI-fetched nssm.exe and ISCC output.
+windows/setup/nssm.exe
+windows/setup/Output/
+
+# Electron desktop shell
+desktop/node_modules/
+desktop/out/
+desktop/dist/

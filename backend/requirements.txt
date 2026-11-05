@@ -1,0 +1,22 @@
+fastapi==0.115.6
+uvicorn[standard]==0.34.0
+httpx==0.28.1
+apscheduler==3.11.0
+pydantic==2.13.4
+# Portfolio analytics and the bar backtester (vectorized maths).
+numpy==2.5.4
+pytest==8.3.4
+xlrd==2.0.1
+openpyxl==3.1.5
+argon2-cffi==25.1.0
+pyotp==2.10.0
+segno==1.6.6
+# Process/system metrics for the Server page. Imported defensively in main.py,
+# so a missing wheel degrades that one panel rather than breaking startup.
+psutil==7.2.2
+# Optional: headless Chromium for the margin_debt weekly fetch (tier 4), since
+# FINRA's Cloudflare front refuses plain HTTP. Imported lazily; without it (or
+# without the browser binary) only that tier fails, with an install hint in the
+# source status. After installing, fetch the browser once:
+#   .venv\Scripts\python.exe -m playwright install chromium
+playwright==1.63.0

@@ -1,0 +1,53 @@
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-4);
+}
+.strategies {
+  margin: 0;
+  padding: 0;
+  border: none;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: var(--s-2);
+}
+.strategies legend { margin-bottom: var(--s-2); }
+.strategy {
+  appearance: none;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: var(--s-2) var(--s-3);
+  border: 1px solid var(--border);
+  border-radius: var(--r-sm);
+  background: var(--surface-2);
+  color: var(--text);
+  text-align: left;
+  cursor: pointer;
+}
+.strategy:hover, .strategy:focus-visible { border-color: var(--border-strong); outline: none; }
+.strategy[aria-pressed="true"] { border-color: var(--accent); background: var(--accent-weak); }
+.strategyName { font-family: var(--mono); font-size: 13px; font-weight: 700; }
+.strategy[aria-pressed="true"] .strategyName { color: var(--accent-text); }
+.strategySummary { font-size: 12px; line-height: 1.45; color: var(--text-muted); }
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: var(--s-3);
+}
+.universe, .money {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-2);
+}
+.hint { font-size: 12.5px; color: var(--text-faint); }
+.error { color: var(--negative); font-size: 12.5px; }
+.disclaimer {
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--text-faint);
+  padding: var(--s-2) var(--s-3);
+  border: 1px dashed var(--border);
+  border-radius: var(--r-sm);
+}

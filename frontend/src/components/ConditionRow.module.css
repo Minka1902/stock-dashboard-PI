@@ -1,0 +1,16 @@
+.row { display: flex; flex-wrap: wrap; align-items: center; gap: var(--s-2); padding: var(--s-2) 0; border-top: 1px solid var(--grid); }
+.row[data-invalid="yes"] { border-left: 2px solid var(--negative); padding-left: var(--s-2); }
+.operand { display: inline-flex; align-items: center; gap: 4px; }
+.select { min-width: 150px; max-width: 220px; }
+.num {
+  width: 72px;
+  height: 32px;
+  padding: 0 8px;
+  border: 1px solid var(--border);
+  border-radius: var(--r-sm);
+  background: var(--surface-2);
+  color: var(--text);
+  font-family: var(--mono);
+  font-size: 12px;
+}
+.error { flex-basis: 100%; color: var(--negative); font-size: 12px; }

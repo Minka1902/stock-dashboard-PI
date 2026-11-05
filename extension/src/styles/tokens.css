@@ -1,0 +1,88 @@
+/* Design tokens copied from frontend/src/index.css:40-205.
+ *
+ * Two deliberate changes from the original:
+ *   1. The @font-face rules are dropped — they point at absolute /fonts/*.woff2
+ *      paths that 404 inside chrome-extension://. --mono/--sans fall back to
+ *      system stacks. The Atkinson faces only mattered for the dashboard's
+ *      dyslexia mode, which the popup doesn't expose.
+ *   2. Only the dark and light palettes are carried over; the popup's theme
+ *      picker offers those two. retro/warm can be pasted in later verbatim.
+ *
+ * KEEP IN SYNC with frontend/src/index.css if the token names change. */
+
+:root {
+  --r-xs: 4px;
+  --r-sm: 6px;
+  --r-md: 10px;
+  --r-lg: 14px;
+  --r-pill: 999px;
+
+  --s-1: 4px;
+  --s-2: 8px;
+  --s-3: 12px;
+  --s-4: 16px;
+  --s-5: 24px;
+  --s-6: 32px;
+  --s-7: 48px;
+
+  --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  --sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --caption-spacing: 0.08em;
+
+  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-out-quart: cubic-bezier(0.25, 1, 0.5, 1);
+  --dur-1: 120ms;
+  --dur-2: 180ms;
+  --dur-3: 260ms;
+}
+
+:root,
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --bg: oklch(16% 0.02 285);
+  --surface: oklch(20% 0.025 285);
+  --surface-2: oklch(24% 0.03 285);
+  --surface-hover: oklch(27% 0.035 285);
+  --surface-3: oklch(30% 0.035 285);
+  --grid: oklch(26% 0.02 285);
+  --border: oklch(32% 0.03 285);
+  --border-strong: oklch(42% 0.04 285);
+  --text: oklch(93% 0.015 285);
+  --text-muted: oklch(72% 0.02 285);
+  --text-faint: oklch(55% 0.02 285);
+  --accent: oklch(70% 0.16 292);
+  --accent-strong: oklch(78% 0.18 292);
+  --accent-weak: oklch(34% 0.08 292);
+  --positive: oklch(74% 0.15 155);
+  --positive-weak: oklch(32% 0.07 155);
+  --negative: oklch(66% 0.17 25);
+  --negative-weak: oklch(32% 0.08 25);
+  --info: oklch(72% 0.12 235);
+  --info-weak: oklch(32% 0.06 235);
+  --shadow: 0 8px 28px oklch(8% 0.02 285 / 0.55);
+}
+
+:root[data-theme="light"] {
+  color-scheme: light;
+  --bg: oklch(97% 0.008 285);
+  --surface: oklch(100% 0 0);
+  --surface-2: oklch(96% 0.01 285);
+  --surface-hover: oklch(93% 0.015 285);
+  --surface-3: oklch(90% 0.02 285);
+  --grid: oklch(91% 0.01 285);
+  --border: oklch(87% 0.015 285);
+  --border-strong: oklch(76% 0.025 285);
+  --text: oklch(24% 0.02 285);
+  --text-muted: oklch(46% 0.02 285);
+  --text-faint: oklch(62% 0.02 285);
+  --accent: oklch(52% 0.18 292);
+  --accent-strong: oklch(44% 0.2 292);
+  --accent-weak: oklch(92% 0.05 292);
+  --positive: oklch(52% 0.15 155);
+  --positive-weak: oklch(92% 0.06 155);
+  --negative: oklch(52% 0.19 25);
+  --negative-weak: oklch(93% 0.06 25);
+  --info: oklch(52% 0.13 235);
+  --info-weak: oklch(92% 0.05 235);
+  --shadow: 0 8px 24px oklch(50% 0.02 285 / 0.16);
+}

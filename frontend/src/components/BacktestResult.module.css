@@ -1,0 +1,14 @@
+.root { display: flex; flex-direction: column; gap: var(--s-3); }
+.meta { font-family: var(--mono); font-size: 12px; color: var(--text-muted); }
+.variants[data-many="yes"] { color: var(--caution); font-weight: 700; }
+.warn { padding: var(--s-2) var(--s-3); border: 1px solid var(--caution); border-radius: var(--r-sm); background: var(--caution-weak); font-size: 12.5px; }
+.stretch { display: flex; flex-direction: column; gap: var(--s-2); }
+.title { font-family: var(--mono); font-size: 10.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.07em; color: var(--text-faint); }
+.thin { font-size: 12.5px; color: var(--text-muted); }
+.split { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: var(--s-4); }
+.trades summary { cursor: pointer; font-family: var(--mono); font-size: 11px; font-weight: 700; text-transform: uppercase; color: var(--text-muted); }
+.trades ul { margin: var(--s-2) 0 0; padding: 0; list-style: none; font-family: var(--mono); font-size: 12px; font-variant-numeric: tabular-nums; max-height: 320px; overflow-y: auto; }
+.trades li { display: grid; grid-template-columns: 1.4fr 1.2fr 0.7fr 1.2fr; gap: var(--s-2); padding: 4px 0; border-top: 1px solid var(--grid); }
+.trades [data-tone="pos"] { color: var(--positive); }
+.trades [data-tone="neg"] { color: var(--negative); }
+.faint { color: var(--text-faint); }

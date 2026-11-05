@@ -1,0 +1,13 @@
+.root { display: flex; flex-wrap: wrap; align-items: center; gap: var(--s-2); }
+.halted {
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--negative);
+  padding: 3px 8px;
+  border: 1px solid var(--negative);
+  border-radius: var(--r-xs);
+  background: var(--negative-weak);
+}

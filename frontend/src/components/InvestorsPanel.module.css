@@ -1,0 +1,25 @@
+.panel { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-md); box-shadow: var(--shadow); overflow: hidden; }
+.head { display: flex; align-items: flex-start; gap: var(--s-3); padding: var(--s-5); border-bottom: 1px solid var(--border); }
+.title { font-size: 16px; font-weight: 600; }
+.subtitle { margin-top: 4px; color: var(--text-muted); font-size: 12.5px; }
+.tableWrap { overflow-x: auto; }
+.table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+.table thead th { text-align: left; font-size: 11px; font-weight: 600; color: var(--text-faint); background: var(--surface-2); padding: 10px var(--s-5); white-space: nowrap; }
+.table tbody td { padding: 11px var(--s-5); border-top: 1px solid var(--border); vertical-align: middle; }
+.table tbody tr:hover { background: var(--surface-hover); }
+.num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.filer { font-weight: 600; white-space: nowrap; }
+.ticker { appearance: none; border: none; background: none; padding: 0; font: inherit; font-family: var(--mono); font-weight: 700; color: var(--accent-text); cursor: pointer; }
+.muted { color: var(--text-muted); white-space: nowrap; }
+.badge { display: inline-block; padding: 3px 10px; border-radius: var(--r-pill); font-size: 11.5px; font-weight: 600; border: 1px solid var(--border); color: var(--text-muted); white-space: nowrap; }
+.badge[data-tone="buy"] { color: var(--positive); background: var(--positive-weak); border-color: transparent; }
+.badge[data-tone="sell"] { color: var(--negative); background: var(--negative-weak); border-color: transparent; }
+.filers { margin: 0; padding: var(--s-4) var(--s-5); list-style: none; display: flex; flex-direction: column; gap: var(--s-2); border-top: 1px solid var(--border); font-size: 12.5px; }
+.filers li { display: flex; flex-wrap: wrap; gap: var(--s-2); }
+.filerLink { font-weight: 600; color: var(--accent-text); }
+
+@media (max-width: 640px) {
+  .head { padding: var(--s-4) var(--s-3); }
+  .table thead th, .table tbody td { padding-inline: var(--s-3); }
+  .filers { padding-inline: var(--s-3); }
+}

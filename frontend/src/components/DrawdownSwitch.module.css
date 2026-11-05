@@ -1,0 +1,55 @@
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-2);
+  padding: var(--s-3) var(--s-4);
+  border-bottom: 1px solid var(--grid);
+}
+.card[data-state="tripped"] { background: var(--negative-weak); }
+.head { display: flex; align-items: center; gap: var(--s-2); }
+.title {
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+.pill {
+  font-family: var(--mono);
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  padding: 1px 8px;
+  border-radius: var(--r-pill);
+  border: 1px solid var(--grid);
+  color: var(--text-muted);
+}
+.pill[data-state="armed"] { color: var(--positive); border-color: currentColor; }
+.pill[data-state="tripped"] { color: var(--negative); border-color: currentColor; }
+.text { font-size: 12.5px; color: var(--text-muted); max-width: 80ch; }
+.now { font-family: var(--mono); font-size: 13px; font-variant-numeric: tabular-nums; }
+.faint { color: var(--text-faint); font-size: 12px; }
+.tripped {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s-2);
+  padding: var(--s-2) var(--s-3);
+  border: 1px solid var(--negative);
+  border-radius: var(--r-sm);
+  font-size: 13px;
+}
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-2);
+  max-width: 360px;
+}
+.actions { display: flex; gap: var(--s-2); }
+.error { color: var(--negative); font-size: 12.5px; }
+
+@media (max-width: 640px) {
+  .card { padding-inline: var(--s-3); }
+}

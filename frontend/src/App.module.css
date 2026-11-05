@@ -1,0 +1,83 @@
+.app {
+  display: flex;
+  height: 100svh;
+  overflow: hidden;
+  background: var(--bg);
+  background-image: var(--bg-grad);
+  background-repeat: no-repeat;
+}
+
+.main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  height: 100svh;
+}
+
+/* Fixed top band: status bar + ticker tape. Never scrolls. */
+.band {
+  flex: none;
+  border-bottom: 1px solid var(--border);
+  background: color-mix(in oklab, var(--bg) 88%, transparent);
+  backdrop-filter: blur(6px);
+}
+
+.scroll {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+}
+
+.inner {
+  max-width: 1560px;
+  margin: 0 auto;
+  padding: var(--s-5) var(--s-5) var(--s-7);
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-5);
+}
+
+/* Analysis takes the whole screen (no rail, no marquee, no top bar), so it
+   gets the width back and sits tighter to the top. */
+.app[data-detail="yes"] .inner {
+  max-width: 1860px;
+  padding-top: var(--s-4);
+}
+
+.twoCol {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--s-5);
+  align-items: start;
+}
+
+.error {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  padding: 10px var(--s-4);
+  border-radius: var(--r-sm);
+  background: var(--negative-weak);
+  border: 1px solid var(--negative);
+  color: var(--text);
+  font-family: var(--mono);
+  font-size: 12.5px;
+}
+
+@media (max-width: 1000px) {
+  .twoCol {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 640px) {
+  .inner {
+    padding: var(--s-3) var(--s-2) var(--s-6);
+    gap: var(--s-3);
+  }
+  /* Clear the fixed bottom tab bar (MobileNav). */
+  .app[data-detail="no"] .scroll {
+    padding-bottom: calc(var(--mobile-nav-h) + env(safe-area-inset-bottom, 0px));
+  }
+}

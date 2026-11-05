@@ -1,0 +1,191 @@
+.panel {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  box-shadow: var(--shadow);
+  overflow: hidden;
+}
+
+.head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--s-3);
+  padding: var(--s-5);
+  border-bottom: 1px solid var(--border);
+}
+
+.title {
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.subtitle {
+  margin-top: 4px;
+  color: var(--text-muted);
+  font-size: 12.5px;
+}
+
+.controls {
+  flex-shrink: 0;
+}
+
+.toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 12.5px;
+  color: var(--text-muted);
+  cursor: pointer;
+  white-space: nowrap;
+}
+.toggle input {
+  accent-color: var(--accent);
+  cursor: pointer;
+}
+
+.tableWrap {
+  overflow-x: auto;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13.5px;
+}
+
+.table thead th.num {
+  text-align: right;
+}
+.table thead th {
+  position: sticky;
+  z-index: var(--z-sticky);
+  top: 0;
+  text-align: left;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  color: var(--text-faint);
+  background: var(--surface-2);
+  padding: 10px var(--s-5);
+  white-space: nowrap;
+}
+
+.table tbody td {
+  padding: 11px var(--s-5);
+  border-top: 1px solid var(--border);
+  vertical-align: middle;
+}
+
+.table tbody tr:hover {
+  background: var(--surface-hover);
+}
+
+/* Date section header spanning the row. */
+.dateRow td {
+  background: var(--surface-2);
+  color: var(--text);
+  font-weight: 600;
+  font-size: 12px;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  padding: 8px var(--s-5);
+}
+.dateRow:hover td {
+  background: var(--surface-2);
+}
+
+.time {
+  font-family: var(--mono);
+  font-size: 12.5px;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+/* Impact indicator dot. */
+.dot {
+  display: inline-block;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--text-faint);
+}
+.dot[data-impact="high"] {
+  background: var(--negative);
+  box-shadow: 0 0 0 3px var(--negative-weak);
+}
+.dot[data-impact="medium"] {
+  background: var(--caution);
+  box-shadow: 0 0 0 3px var(--caution-weak);
+}
+.dot[data-impact="low"] {
+  background: var(--text-faint);
+}
+
+.event {
+  max-width: 420px;
+}
+.eventName {
+  display: block;
+  font-weight: 500;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.country {
+  font-size: 11.5px;
+  color: var(--text-faint);
+}
+
+.num {
+  text-align: right;
+  font-family: var(--mono);
+  font-size: 12.5px;
+  white-space: nowrap;
+}
+.actual {
+  color: var(--text);
+  font-weight: 700;
+}
+.muted {
+  color: var(--text-muted);
+}
+
+.empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: var(--s-2);
+  padding: 56px var(--s-5);
+}
+
+.emptyIcon {
+  display: grid;
+  place-items: center;
+  width: 52px;
+  height: 52px;
+  border-radius: var(--r-md);
+  background: var(--accent-weak);
+  color: var(--accent-text);
+}
+
+.emptyTitle {
+  font-weight: 600;
+  color: var(--text);
+}
+
+.emptyBtn {
+  margin-top: var(--s-2);
+  padding: 8px 16px;
+  border-radius: var(--r-sm);
+  border: none;
+  background: var(--accent);
+  color: var(--on-accent);
+  font-weight: 600;
+  cursor: pointer;
+}
+.emptyBtn:disabled {
+  opacity: 0.6;
+  cursor: default;
+}

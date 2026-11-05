@@ -1,0 +1,13 @@
+.spark {
+  display: inline-block;
+  vertical-align: middle;
+}
+.dash {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 30px;
+  color: var(--text-faint);
+  font-family: var(--mono);
+  font-size: 11px;
+}

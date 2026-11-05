@@ -1,0 +1,8 @@
+.card { display: flex; flex-direction: column; gap: var(--s-2); padding: var(--s-3) var(--s-4); border-bottom: 1px solid var(--grid); }
+.title { font-family: var(--mono); font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; }
+.text { font-size: 12.5px; color: var(--text-muted); max-width: 90ch; }
+.row { display: flex; flex-wrap: wrap; align-items: center; gap: var(--s-2) var(--s-4); }
+.check { display: flex; align-items: center; gap: var(--s-2); font-size: 13px; color: var(--text-muted); min-height: 32px; }
+.ok { color: var(--positive); font-size: 12.5px; }
+
+@media (max-width: 640px) { .card { padding-inline: var(--s-3); } }

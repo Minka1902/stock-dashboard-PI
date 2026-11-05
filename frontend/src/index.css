@@ -1,0 +1,480 @@
+/* ============================================================
+   Stock Signal Terminal — global reset + design tokens
+   Dark-first, monospace-led, one committed amber accent.
+   See DESIGN.md for the full system.
+   ============================================================ */
+
+/* Atkinson Hyperlegible — self-hosted, used only in dyslexia-friendly mode. */
+@font-face {
+  font-family: "Atkinson Hyperlegible";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("/fonts/atkinson-hyperlegible-regular.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Atkinson Hyperlegible";
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url("/fonts/atkinson-hyperlegible-bold.woff2") format("woff2");
+}
+
+/* The new-shekel sign (U+20AA) only. The monospace fonts Windows ships
+   (Consolas, Lucida Console, Courier New) draw ₪ at lowercase height, so
+   "₪120.50" reads smaller than "$341.46" beside it. This face serves just
+   that one code point: an upright mono ₪ when one is installed, else the
+   stack's own glyph scaled to digit height. Faces sharing a family and a
+   unicode-range are tried last-declared first, so the unscaled one wins
+   when it exists. */
+@font-face {
+  font-family: "Shekel Mono";
+  src: local("Consolas"), local("Menlo"), local("Courier New");
+  unicode-range: U+20AA;
+  size-adjust: 128%;
+}
+@font-face {
+  font-family: "Shekel Mono";
+  src: local("DejaVu Sans Mono"), local("Noto Sans Mono"), local("Liberation Mono");
+  unicode-range: U+20AA;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+}
+
+/* ---------- Design tokens ---------- */
+:root {
+  /* radius — terminal is sharp; small radii only */
+  --r-xs: 3px;
+  --r-sm: 5px;
+  --r-md: 8px;
+  --r-lg: 12px;
+  --r-pill: 999px;
+
+  /* spacing scale */
+  --s-1: 4px;
+  --s-2: 8px;
+  --s-3: 12px;
+  --s-4: 16px;
+  --s-5: 24px;
+  --s-6: 32px;
+  --s-7: 48px;
+
+  /* typography — monospace leads */
+  --mono: "Shekel Mono", ui-monospace, "SF Mono", "Cascadia Code", "Segoe UI Mono", "Roboto Mono", Menlo, Consolas, monospace;
+  --sans: system-ui, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+
+  /* uppercase terminal caption */
+  --caption-spacing: 0.09em;
+
+  /* type scale (DESIGN.md): caption, small, body, lead, h2, h1, display */
+  --fs-caption: 11px;
+  --fs-small: 12.5px;
+  --fs-body: 14px;
+  --fs-lead: 17px;
+  --fs-h2: 22px;
+  --fs-h1: 30px;
+  --fs-display: 44px;
+
+  /* Minimum hit area for a coarse pointer (touch). Breakpoints can't be custom
+     properties inside @media, so they are fixed values, documented in
+     DESIGN.md: 1000 (two columns stack), 900 (rail -> icons), 640 (phone:
+     bottom tab bar, stacked tables), 560 (small phone). */
+  --tap: 40px;
+  --mobile-nav-h: 60px;
+
+  --sidebar-w: 212px;
+
+  /* Stacking order. Anchored popups are portaled to <body>, so they live in
+     the root stacking context and these values are directly comparable. That
+     matters: the top band sets `backdrop-filter`, which creates a stacking
+     context, so a popup rendered inside it could never outrank a sticky table
+     row no matter how large its z-index — the reason menus used to be sliced
+     off by the first row of a scrolled table. */
+  --z-sticky: 1;    /* sticky thead / group-header rows */
+  --z-raised: 3;    /* in-panel chrome: chart toolbar, section nav */
+  --z-popover: 400; /* menus and tooltips anchored to a trigger */
+  --z-overlay: 800; /* command palette */
+  --z-tour: 1000;   /* guided-tour spotlight */
+  --z-tooltip: 1100; /* transient hover/focus hints — above everything, incl. the tour */
+
+  /* motion */
+  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-out-quart: cubic-bezier(0.25, 1, 0.5, 1);
+  --dur-1: 120ms;
+  --dur-2: 180ms;
+  --dur-3: 260ms;
+
+  color-scheme: dark;
+  font-family: var(--mono);
+  /* ADHD-friendly base: comfortable size + relaxed leading for scanning. */
+  font-size: 14.5px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Amber phosphor focus ring — high contrast, unmistakable. */
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: var(--r-xs);
+}
+
+/* ---------- Dark theme (primary) ----------
+   Warm graphite neutrals (hue 80, tiny chroma) read as one family with amber. */
+:root,
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --bg: oklch(0.145 0.007 80);
+  --bg-grad: radial-gradient(1200px 600px at 78% -18%, oklch(0.82 0.145 75 / 0.06), transparent 60%);
+  --surface: oklch(0.183 0.008 80);
+  --surface-2: oklch(0.223 0.009 80);
+  --surface-hover: oklch(0.248 0.010 80);
+  --surface-3: oklch(0.268 0.010 80);
+  --grid: oklch(1 0 0 / 0.055);
+  --border: oklch(1 0 0 / 0.11);
+  --border-strong: oklch(1 0 0 / 0.22);
+  --text: oklch(0.945 0.006 80);
+  --text-muted: oklch(0.72 0.010 80);
+  --text-faint: oklch(0.62 0.012 80);
+  --accent: oklch(0.82 0.145 75);
+  /* Accent used as TEXT. Same as --accent on the dark palettes; the light
+     ones need a darker shade to reach 4.5:1 on their pale surfaces. */
+  --accent-text: var(--accent);
+  --accent-strong: oklch(0.76 0.16 68);
+  --accent-weak: oklch(0.82 0.145 75 / 0.15);
+  --accent-glow: oklch(0.82 0.145 75 / 0.35);
+  --positive: oklch(0.84 0.17 158);
+  --positive-weak: oklch(0.84 0.17 158 / 0.16);
+  --negative: oklch(0.70 0.20 20);
+  --negative-weak: oklch(0.64 0.215 20 / 0.16);
+  --info: oklch(0.74 0.11 232);
+  --info-weak: oklch(0.74 0.11 232 / 0.16);
+  --shadow: 0 1px 0 oklch(1 0 0 / 0.04) inset, 0 12px 34px oklch(0 0 0 / 0.5);
+  --shadow-lg: 0 1px 0 oklch(1 0 0 / 0.05) inset, 0 20px 48px oklch(0 0 0 / 0.62);
+  /* Mid-range / "watch" tone, between positive and negative. */
+  --caution: oklch(0.72 0.15 60);
+  --caution-weak: oklch(0.72 0.15 60 / 0.18);
+  /* Text on a solid accent / negative fill (primary buttons, badges). */
+  --on-accent: oklch(0.16 0.01 80);
+  --on-negative: oklch(0.16 0.01 80);
+  --switch-knob: oklch(0.97 0.004 80);
+  --scrim: oklch(0 0 0 / 0.5);
+  --scrim-strong: oklch(0 0 0 / 0.62);
+  /* Chart & canvas tokens. lightweight-charts and the drawing layer paint on
+     <canvas>, so they read these through lib/themeColors.js (which converts
+     oklch to rgb) rather than through CSS. Every palette defines all of them. */
+  --chart-text: var(--text-muted);
+  --chart-grid: var(--grid);
+  --chart-border: var(--border);
+  --chart-crosshair: oklch(0.72 0.010 80 / 0.55);
+  --chart-up: var(--positive);
+  --chart-down: var(--negative);
+  --chart-accent: var(--accent);
+  --chart-info: var(--info);
+  --chart-muted: oklch(0.62 0.012 80);
+  --chart-compare: oklch(0.74 0.17 305);
+  --draw-stroke: var(--accent);
+  --draw-selected: var(--info);
+  --draw-fill: oklch(0.82 0.145 75 / 0.12);
+  --draw-label: var(--on-accent);
+}
+
+/* ---------- Light theme (fallback) ---------- */
+:root[data-theme="light"] {
+  color-scheme: light;
+  --bg: oklch(0.965 0.006 80);
+  --bg-grad: radial-gradient(1200px 600px at 78% -18%, oklch(0.62 0.15 68 / 0.08), transparent 60%);
+  --surface: oklch(0.995 0.003 80);
+  --surface-2: oklch(0.955 0.006 80);
+  --surface-hover: oklch(0.93 0.008 80);
+  --surface-3: oklch(0.915 0.009 80);
+  --grid: oklch(0 0 0 / 0.06);
+  --border: oklch(0.86 0.010 80);
+  --border-strong: oklch(0.78 0.014 80);
+  --text: oklch(0.24 0.020 80);
+  --text-muted: oklch(0.46 0.022 80);
+  --text-faint: oklch(0.53 0.018 80);
+  --accent: oklch(0.62 0.15 68);
+  --accent-text: oklch(0.48 0.14 64);
+  --accent-strong: oklch(0.54 0.16 64);
+  --accent-weak: oklch(0.62 0.15 68 / 0.14);
+  --accent-glow: oklch(0.62 0.15 68 / 0.30);
+  --positive: oklch(0.44 0.13 158);
+  --positive-weak: oklch(0.56 0.15 158 / 0.14);
+  --negative: oklch(0.50 0.20 22);
+  --negative-weak: oklch(0.55 0.20 22 / 0.12);
+  --info: oklch(0.46 0.12 232);
+  --info-weak: oklch(0.52 0.12 232 / 0.14);
+  --shadow: 0 1px 2px oklch(0.6 0.02 80 / 0.18), 0 12px 30px oklch(0.6 0.02 80 / 0.16);
+  --shadow-lg: 0 2px 4px oklch(0.6 0.02 80 / 0.16), 0 20px 44px oklch(0.6 0.02 80 / 0.22);
+  --caution: oklch(0.52 0.16 52);
+  --caution-weak: oklch(0.58 0.16 45 / 0.14);
+  --on-accent: oklch(0.18 0.02 70);
+  --on-negative: oklch(0.99 0.003 80);
+  --switch-knob: oklch(1 0 0);
+  --scrim: oklch(0.2 0.02 80 / 0.4);
+  --scrim-strong: oklch(0.2 0.02 80 / 0.55);
+  --chart-text: var(--text-muted);
+  --chart-grid: oklch(0 0 0 / 0.07);
+  --chart-border: var(--border);
+  --chart-crosshair: oklch(0.46 0.022 80 / 0.55);
+  --chart-up: var(--positive);
+  --chart-down: var(--negative);
+  --chart-accent: var(--accent);
+  --chart-info: var(--info);
+  --chart-muted: oklch(0.52 0.018 80);
+  --chart-compare: oklch(0.52 0.20 305);
+  --draw-stroke: var(--accent);
+  --draw-selected: var(--info);
+  --draw-fill: oklch(0.62 0.15 68 / 0.14);
+  --draw-label: var(--on-accent);
+}
+
+/* ---------- Retro theme (purple-phosphor terminal) ----------
+   Near-black CRT violet with a bright phosphor-purple accent; up/down stay
+   distinct (mint vs. amber) so signals never blur into one purple wash. */
+:root[data-theme="retro"] {
+  color-scheme: dark;
+  --bg: oklch(0.15 0.032 300);
+  --bg-grad: radial-gradient(1200px 600px at 78% -18%, oklch(0.72 0.19 300 / 0.09), transparent 60%);
+  --surface: oklch(0.185 0.034 300);
+  --surface-2: oklch(0.225 0.038 300);
+  --surface-hover: oklch(0.25 0.040 300);
+  --surface-3: oklch(0.275 0.042 300);
+  --grid: oklch(0.72 0.19 300 / 0.10);
+  --border: oklch(0.72 0.17 300 / 0.18);
+  --border-strong: oklch(0.72 0.17 300 / 0.32);
+  --text: oklch(0.93 0.045 300);
+  --text-muted: oklch(0.77 0.06 300);
+  --text-faint: oklch(0.62 0.07 300);
+  --accent: oklch(0.74 0.17 300);
+  --accent-text: var(--accent);
+  --accent-strong: oklch(0.68 0.20 300);
+  --accent-weak: oklch(0.74 0.17 300 / 0.18);
+  --accent-glow: oklch(0.74 0.19 300 / 0.42);
+  --positive: oklch(0.88 0.20 158);
+  --positive-weak: oklch(0.88 0.20 158 / 0.16);
+  --negative: oklch(0.78 0.17 70);
+  --negative-weak: oklch(0.78 0.17 70 / 0.18);
+  --info: oklch(0.82 0.13 200);
+  --info-weak: oklch(0.82 0.13 200 / 0.16);
+  --shadow: 0 1px 0 oklch(0.74 0.18 300 / 0.06) inset, 0 12px 34px oklch(0 0.02 300 / 0.55);
+  --shadow-lg: 0 1px 0 oklch(0.74 0.18 300 / 0.08) inset, 0 20px 48px oklch(0 0.02 300 / 0.66);
+  /* Negative is already amber here, so "caution" moves to a phosphor yellow. */
+  --caution: oklch(0.86 0.15 105);
+  --caution-weak: oklch(0.86 0.15 105 / 0.16);
+  --on-accent: oklch(0.15 0.03 300);
+  --on-negative: oklch(0.15 0.03 300);
+  --switch-knob: oklch(0.96 0.03 300);
+  --scrim: oklch(0.08 0.03 300 / 0.55);
+  --scrim-strong: oklch(0.08 0.03 300 / 0.68);
+  --chart-text: var(--text-muted);
+  --chart-grid: var(--grid);
+  --chart-border: var(--border);
+  --chart-crosshair: oklch(0.77 0.06 300 / 0.6);
+  --chart-up: var(--positive);
+  --chart-down: var(--negative);
+  --chart-accent: var(--accent);
+  --chart-info: var(--info);
+  --chart-muted: oklch(0.64 0.07 300);
+  /* The accent is already violet here, so the SPY overlay goes phosphor pink. */
+  --chart-compare: oklch(0.80 0.15 350);
+  --draw-stroke: var(--accent);
+  --draw-selected: var(--info);
+  --draw-fill: oklch(0.74 0.17 300 / 0.14);
+  --draw-label: var(--on-accent);
+}
+
+/* ---------- Warm theme (cream / amber paper) ---------- */
+:root[data-theme="warm"] {
+  color-scheme: light;
+  --bg: oklch(0.955 0.022 85);
+  --bg-grad: radial-gradient(1200px 600px at 78% -18%, oklch(0.62 0.15 55 / 0.10), transparent 60%);
+  --surface: oklch(0.985 0.016 85);
+  --surface-2: oklch(0.945 0.022 85);
+  --surface-hover: oklch(0.92 0.026 85);
+  --surface-3: oklch(0.905 0.028 80);
+  --grid: oklch(0.45 0.05 60 / 0.08);
+  --border: oklch(0.85 0.028 75);
+  --border-strong: oklch(0.76 0.036 70);
+  --text: oklch(0.28 0.032 60);
+  --text-muted: oklch(0.48 0.034 62);
+  --text-faint: oklch(0.52 0.030 66);
+  --accent: oklch(0.60 0.15 55);
+  --accent-text: oklch(0.48 0.14 52);
+  --accent-strong: oklch(0.52 0.16 50);
+  --accent-weak: oklch(0.60 0.15 55 / 0.15);
+  --accent-glow: oklch(0.60 0.15 55 / 0.30);
+  --positive: oklch(0.44 0.13 150);
+  --positive-weak: oklch(0.55 0.15 150 / 0.14);
+  --negative: oklch(0.50 0.20 25);
+  --negative-weak: oklch(0.54 0.20 25 / 0.13);
+  --info: oklch(0.46 0.12 232);
+  --info-weak: oklch(0.52 0.12 232 / 0.14);
+  --shadow: 0 1px 2px oklch(0.55 0.04 60 / 0.20), 0 12px 30px oklch(0.55 0.04 60 / 0.16);
+  --shadow-lg: 0 2px 4px oklch(0.55 0.04 60 / 0.18), 0 20px 44px oklch(0.55 0.04 60 / 0.22);
+  --caution: oklch(0.50 0.12 90);
+  --caution-weak: oklch(0.58 0.12 90 / 0.16);
+  --on-accent: oklch(0.17 0.03 60);
+  --on-negative: oklch(0.99 0.01 85);
+  --switch-knob: oklch(0.995 0.01 85);
+  --scrim: oklch(0.25 0.03 60 / 0.4);
+  --scrim-strong: oklch(0.25 0.03 60 / 0.55);
+  --chart-text: var(--text-muted);
+  --chart-grid: oklch(0.45 0.05 60 / 0.10);
+  --chart-border: var(--border);
+  --chart-crosshair: oklch(0.48 0.034 62 / 0.55);
+  --chart-up: var(--positive);
+  --chart-down: var(--negative);
+  --chart-accent: var(--accent);
+  --chart-info: var(--info);
+  --chart-muted: oklch(0.52 0.030 66);
+  --chart-compare: oklch(0.50 0.18 320);
+  --draw-stroke: var(--accent);
+  --draw-selected: var(--info);
+  --draw-fill: oklch(0.60 0.15 55 / 0.14);
+  --draw-label: var(--on-accent);
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+}
+
+#root {
+  min-height: 100svh;
+}
+
+h1,
+h2,
+h3 {
+  margin: 0;
+  color: var(--text);
+  font-weight: 600;
+}
+
+p {
+  margin: 0;
+}
+
+button {
+  font-family: inherit;
+  font-size: inherit;
+}
+
+/* Uppercase terminal caption — the primary hierarchy device. */
+.caption {
+  font-family: var(--mono);
+  text-transform: uppercase;
+  letter-spacing: var(--caption-spacing);
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-faint);
+}
+
+.tabular {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Opt into prose (sans, comfortable measure) for long-form copy like news. */
+.prose {
+  font-family: var(--sans);
+  line-height: 1.55;
+}
+
+/* Scrolling stays fully functional (wheel/trackpad/keyboard); the bars are
+   hidden everywhere for a cleaner surface. */
+* {
+  scrollbar-width: none;              /* Firefox */
+}
+*::-webkit-scrollbar {                /* Chromium / Safari */
+  width: 0;
+  height: 0;
+  display: none;
+}
+
+/* ============================================================
+   Dyslexia-friendly mode (opt-in). Applied to <html data-dyslexia="on">.
+   Swaps in Atkinson Hyperlegible EVERYWHERE (overriding the mono base),
+   enlarges text, loosens spacing. Numbers keep tabular alignment.
+   ============================================================ */
+:root[data-dyslexia="on"] {
+  --mono: "Atkinson Hyperlegible", system-ui, "Segoe UI", Roboto, sans-serif;
+  --sans: "Atkinson Hyperlegible", system-ui, "Segoe UI", Roboto, sans-serif;
+  font-family: "Atkinson Hyperlegible", system-ui, sans-serif;
+  font-size: 15.5px;
+  line-height: 1.8;
+}
+:root[data-dyslexia="on"] body {
+  letter-spacing: 0.015em;
+  word-spacing: 0.05em;
+}
+:root[data-dyslexia="on"] .caption,
+:root[data-dyslexia="on"] th {
+  text-transform: none !important;
+  letter-spacing: 0.01em !important;
+}
+:root[data-dyslexia="on"] .prose p {
+  max-width: 68ch;
+}
+
+/* ============================================================
+   Reduce-motion mode (opt-in). Applied to <html data-reduced-motion="on">.
+   Collapses animation and transition durations so movement doesn't distract.
+   Nothing essential is motion-only.
+   ============================================================ */
+:root[data-reduced-motion="on"] *,
+:root[data-reduced-motion="on"] *::before,
+:root[data-reduced-motion="on"] *::after {
+  animation-duration: 0.001ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.001ms !important;
+  scroll-behavior: auto !important;
+}
+
+/* ============================================================
+   Phones (≤640px). Panel headers let their controls drop under the title
+   instead of squeezing the title into a narrow column; every panel shares
+   the <section><header> structure, so this is one rule, not 25.
+   ============================================================ */
+@media (max-width: 640px) {
+  main section > header {
+    flex-wrap: wrap;
+    row-gap: var(--s-2);
+  }
+}
+
+/* Touch (coarse pointer): every control in the page gets at least the --tap
+   hit height. One rule instead of a min-height in every module; components
+   that also need the width (icon-only buttons) set it in their own module. */
+@media (pointer: coarse) {
+  main button,
+  main select,
+  main [role="tab"],
+  main input:not([type="checkbox"]):not([type="radio"]) {
+    min-height: var(--tap);
+  }
+  main button { min-width: 32px; }
+  main input[type="checkbox"],
+  main input[type="radio"] {
+    width: 20px;
+    height: 20px;
+  }
+}

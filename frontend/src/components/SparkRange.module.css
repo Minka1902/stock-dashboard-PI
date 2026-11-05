@@ -1,0 +1,22 @@
+.toggle {
+  display: inline-flex;
+  border: 1px solid var(--grid);
+  border-radius: var(--r-sm);
+  overflow: hidden;
+}
+.btn {
+  appearance: none;
+  border: none;
+  background: transparent;
+  color: var(--text-muted);
+  font-family: var(--mono);
+  font-size: 10.5px;
+  letter-spacing: 0.04em;
+  padding: 4px 9px;
+  cursor: pointer;
+  border-right: 1px solid var(--grid);
+}
+.btn:last-child { border-right: none; }
+.btn:hover { color: var(--text); background: var(--surface-hover); }
+.btn[data-active="yes"] { color: var(--accent-text); background: var(--accent-weak); }
+.btn:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }

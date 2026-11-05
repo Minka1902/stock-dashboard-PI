@@ -1,0 +1,78 @@
+.panel {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  overflow: hidden;
+  margin-top: var(--s-4);
+}
+.head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s-3);
+  flex-wrap: wrap;
+  padding: var(--s-3) var(--s-4);
+  border-bottom: 1px solid var(--grid);
+}
+.body { padding: var(--s-4); display: flex; flex-direction: column; gap: var(--s-4); }
+
+/* Coverage leads, deliberately: the sample size is the first thing to read. */
+.coverage {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding: var(--s-3);
+  border: 1px solid var(--grid);
+  border-left: 3px solid var(--accent);
+  border-radius: var(--r-sm);
+  background: var(--surface-2);
+}
+.covMain { font-family: var(--mono); font-size: 12px; color: var(--text); }
+.covNote { font-size: 11.5px; color: var(--text-faint); line-height: 1.5; }
+
+.controls {
+  display: flex;
+  align-items: center;
+  gap: var(--s-4);
+  flex-wrap: wrap;
+}
+.benchmark { font-family: var(--mono); font-size: 11px; color: var(--text-faint); flex: 1; min-width: 220px; }
+
+.tableWrap { overflow-x: auto; }
+.table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+.table th {
+  text-align: left;
+  font-family: var(--mono); font-size: 9.5px; font-weight: 600;
+  text-transform: uppercase; letter-spacing: 0.07em; color: var(--text-faint);
+  padding: var(--s-2) var(--s-3);
+  border-bottom: 1px solid var(--grid);
+  white-space: nowrap;
+}
+.table td {
+  padding: 8px var(--s-3);
+  border-bottom: 1px solid var(--grid);
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+.table tbody tr:first-child td { color: var(--text); font-weight: 600; }
+.label { font-family: var(--mono); color: var(--text); }
+.num { text-align: right; font-family: var(--mono); font-variant-numeric: tabular-nums; }
+.num[data-tone="pos"] { color: var(--positive); }
+.num[data-tone="neg"] { color: var(--negative); }
+.num[data-pending="yes"] { color: var(--accent-text); }
+
+/* An unknown is dashed out, never rendered as a zero. */
+.unknown { color: var(--text-faint); }
+
+.bar {
+  display: block;
+  width: 120px;
+  height: 6px;
+  border-radius: var(--r-pill);
+  background: var(--surface-3);
+  overflow: hidden;
+}
+.barFill { display: block; height: 100%; background: var(--accent); border-radius: inherit; }
+
+.empty { font-size: 12.5px; color: var(--text-faint); line-height: 1.6; }
+.error { padding: var(--s-4); color: var(--negative); font-size: 13px; }

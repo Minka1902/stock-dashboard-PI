@@ -1,0 +1,10 @@
+.card { display: flex; flex-direction: column; gap: var(--s-2); padding: var(--s-3) var(--s-4); border-bottom: 1px solid var(--grid); }
+.subtitle { font-family: var(--mono); font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-faint); }
+.title { font-family: var(--mono); font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; }
+.text { font-size: 12.5px; color: var(--text-muted); max-width: 90ch; }
+.form { display: flex; flex-direction: column; gap: var(--s-3); }
+.grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: var(--s-3); }
+.check { display: flex; align-items: center; gap: var(--s-2); font-size: 13px; color: var(--text-muted); min-height: 32px; }
+.actions { display: flex; gap: var(--s-2); }
+
+@media (max-width: 640px) { .card { padding-inline: var(--s-3); } }

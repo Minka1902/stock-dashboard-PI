@@ -1,0 +1,470 @@
+/* Chart workspace chrome: drawing rail, properties bar, text editor,
+   snapshot + drafts menus, toast. Tokens only — every colour follows the
+   four themes. */
+
+/* ---- vertical tool rail ---- */
+.rail {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 3px;
+  border: 1px solid var(--grid);
+  border-radius: var(--r-sm);
+  background: var(--surface-2);
+  align-self: flex-start;
+  position: relative;
+  z-index: var(--z-raised);
+}
+.rail[data-disabled="yes"] { opacity: 0.55; }
+
+.railGroup { position: relative; display: flex; }
+
+.railBtn {
+  appearance: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 28px;
+  border: none;
+  border-radius: var(--r-xs);
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: background-color 0.12s ease, color 0.12s ease;
+}
+.railBtn:hover:not(:disabled) { color: var(--text); background: var(--surface-hover); }
+.railBtn[data-active="yes"] { color: var(--accent-text); background: var(--accent-weak); }
+.railBtn:disabled { opacity: 0.35; cursor: not-allowed; }
+.railBtn:focus-visible, .railMore:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+
+/* the small chevron that opens a group's flyout */
+.railMore {
+  appearance: none;
+  position: absolute;
+  right: -3px;
+  bottom: 0;
+  width: 11px;
+  height: 14px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: var(--text-faint);
+  cursor: pointer;
+  border-radius: 2px;
+}
+.railMore:hover:not(:disabled) { color: var(--text); background: var(--surface-hover); }
+.railMore[aria-expanded="true"] { color: var(--accent-text); }
+
+.railSep {
+  width: 18px;
+  height: 1px;
+  margin: 3px 0;
+  background: var(--border);
+}
+
+.flyout {
+  position: absolute;
+  left: calc(100% + 8px);
+  top: -4px;
+  min-width: 212px;
+  padding: 6px;
+  background: var(--surface-3);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--r-md);
+  box-shadow: var(--shadow);
+  z-index: var(--z-popover);
+  transform-origin: left top;
+}
+.flyoutTitle {
+  padding: 4px 8px 6px;
+  font-family: var(--mono);
+  font-size: 9.5px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+}
+.flyoutList { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 1px; }
+.flyoutItem {
+  appearance: none;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 8px;
+  border: none;
+  border-radius: var(--r-xs);
+  background: transparent;
+  color: var(--text-muted);
+  font-size: 12.5px;
+  text-align: left;
+  cursor: pointer;
+}
+.flyoutItem:hover { background: var(--surface-hover); color: var(--text); }
+.flyoutItem[data-active="yes"] { color: var(--accent-text); background: var(--accent-weak); }
+.flyoutItem:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+.flyoutLabel { flex: 1; }
+
+.kbd {
+  font-family: var(--mono);
+  font-size: 9.5px;
+  color: var(--text-faint);
+  padding: 1px 5px;
+  border: 1px solid var(--border);
+  border-radius: var(--r-xs);
+}
+
+/* ---- floating properties bar (selected drawing) ---- */
+.props {
+  position: absolute;
+  top: 8px;
+  left: 50%;
+  translate: -50% 0;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 7px;
+  background: var(--surface-3);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--r-md);
+  box-shadow: var(--shadow);
+  z-index: var(--z-popover);
+  /* an absolute box at left:50% would otherwise shrink to the right half */
+  width: max-content;
+  max-width: calc(100% - 16px);
+  flex-wrap: wrap;
+}
+.propsKind {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+  padding: 0 4px;
+}
+.swatches { display: inline-flex; gap: 3px; padding: 0 2px; }
+.swatch {
+  appearance: none;
+  width: 16px;
+  height: 16px;
+  padding: 0;
+  border-radius: 50%;
+  border: 2px solid transparent;
+  background: var(--sw);
+  box-shadow: 0 0 0 1px var(--border-strong);
+  cursor: pointer;
+}
+.swatch[data-active="yes"] { border-color: var(--surface-3); box-shadow: 0 0 0 2px var(--text); }
+.swatch:disabled { cursor: not-allowed; opacity: 0.5; }
+.swatch:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+.propsGroup {
+  display: inline-flex;
+  border: 1px solid var(--grid);
+  border-radius: var(--r-xs);
+  overflow: hidden;
+}
+.propsBtn {
+  appearance: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 26px;
+  height: 24px;
+  padding: 0 5px;
+  border: none;
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  border-radius: var(--r-xs);
+}
+.propsGroup .propsBtn { border-radius: 0; }
+.propsBtn:hover:not(:disabled) { color: var(--text); background: var(--surface-hover); }
+.propsBtn[data-active="yes"] { color: var(--accent-text); background: var(--accent-weak); }
+.propsBtn[data-tone="danger"]:hover:not(:disabled) { color: var(--negative); background: var(--negative-weak); }
+.propsBtn:disabled { opacity: 0.35; cursor: not-allowed; }
+.propsBtn:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+.widthGlyph { display: block; width: 14px; background: currentColor; border-radius: 1px; }
+
+.opacity {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--text-faint);
+}
+.opacity input { width: 72px; accent-color: var(--accent); }
+
+/* ---- inline text editor ---- */
+.textEditor {
+  position: absolute;
+  z-index: var(--z-popover);
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.textInput {
+  min-width: 180px;
+  resize: none;
+  padding: 4px 7px;
+  font-family: var(--mono);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text);
+  background: var(--surface-3);
+  border: 1px solid var(--accent);
+  border-radius: var(--r-xs);
+  box-shadow: var(--shadow);
+  outline: none;
+}
+.textHint {
+  font-family: var(--mono);
+  font-size: 9.5px;
+  color: var(--text-faint);
+  background: var(--surface-2);
+  padding: 1px 5px;
+  border-radius: var(--r-xs);
+  align-self: flex-start;
+}
+
+/* ---- toolbar buttons (snapshot / drafts) ---- */
+.toolbarBtn {
+  appearance: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 9px;
+  border: 1px solid var(--grid);
+  border-radius: var(--r-sm);
+  background: transparent;
+  color: var(--text-muted);
+  font-family: var(--mono);
+  font-size: 10.5px;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+}
+.toolbarBtn:hover:not(:disabled) { color: var(--text); background: var(--surface-hover); }
+.toolbarBtn[aria-expanded="true"] { color: var(--accent-text); background: var(--accent-weak); }
+.toolbarBtn:disabled { opacity: 0.4; cursor: not-allowed; }
+.toolbarBtn:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+
+/* ---- shared popover menu ---- */
+.menu {
+  width: min(320px, calc(100vw - 24px));
+  padding: 8px;
+  background: var(--surface-3);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--r-md);
+  box-shadow: var(--shadow-lg);
+  overflow: auto;
+  transform-origin: top right;
+}
+.snapPreview {
+  display: block;
+  width: 100%;
+  border-radius: var(--r-xs);
+  border: 1px solid var(--border);
+  margin-bottom: 8px;
+  background: var(--surface);
+}
+.menuActions { display: flex; flex-direction: column; gap: 2px; }
+.menuItem {
+  appearance: none;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  width: 100%;
+  padding: 7px 8px;
+  border: none;
+  border-radius: var(--r-xs);
+  background: transparent;
+  color: var(--text);
+  font-size: 12.5px;
+  text-align: left;
+  cursor: pointer;
+}
+.menuItem:hover:not(:disabled) { background: var(--surface-hover); }
+.menuItem:disabled { opacity: 0.4; cursor: not-allowed; }
+.menuItem:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+.menuNote { margin: 6px 4px 2px; font-size: 11px; color: var(--text-faint); line-height: 1.4; }
+
+/* ---- drafts ---- */
+.draftsMenu { width: min(380px, calc(100vw - 24px)); }
+.draftsHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 2px 2px 8px;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 6px;
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  color: var(--text-muted);
+}
+.draftList { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 4px; }
+.draftItem {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 8px;
+  border-radius: var(--r-sm);
+  background: var(--surface-2);
+  border: 1px solid var(--grid);
+}
+.draftText { min-width: 0; }
+.draftText strong {
+  display: block;
+  font-size: 13px;
+  color: var(--text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.draftText p {
+  margin: 2px 0 0;
+  font-size: 11.5px;
+  color: var(--text-muted);
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.draftText small { display: block; margin-top: 3px; font-family: var(--mono); font-size: 10px; color: var(--text-faint); }
+.draftActions, .confirmRow { display: flex; align-items: center; gap: 5px; flex-wrap: wrap; }
+.confirmRow span { font-size: 11.5px; color: var(--text-muted); margin-right: auto; }
+
+.primaryBtn, .ghostBtn, .dangerBtn, .iconBtn {
+  appearance: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 10px;
+  border-radius: var(--r-xs);
+  font-size: 11.5px;
+  cursor: pointer;
+  border: 1px solid transparent;
+}
+.primaryBtn { background: var(--accent); color: var(--on-accent); font-weight: 600; }
+.primaryBtn:hover:not(:disabled) { background: var(--accent-strong); }
+.ghostBtn { background: transparent; color: var(--text-muted); border-color: var(--border); }
+.ghostBtn:hover:not(:disabled) { color: var(--text); background: var(--surface-hover); }
+.dangerBtn { background: var(--negative); color: var(--on-accent); font-weight: 600; }
+.iconBtn { padding: 4px 6px; background: transparent; color: var(--text-muted); }
+.iconBtn:hover { color: var(--text); background: var(--surface-hover); }
+.iconBtn[data-tone="danger"]:hover { color: var(--negative); background: var(--negative-weak); }
+.primaryBtn:disabled, .ghostBtn:disabled { opacity: 0.45; cursor: not-allowed; }
+.primaryBtn:focus-visible, .ghostBtn:focus-visible, .dangerBtn:focus-visible, .iconBtn:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+
+/* ---- save / edit draft dialog ---- */
+.scrim {
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-overlay);
+  background: var(--scrim);
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding-top: 14vh;
+}
+.dialog {
+  width: min(460px, 92vw);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 18px;
+  background: var(--surface-3);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--r-lg);
+  box-shadow: var(--shadow-lg);
+}
+.dialogTitle { margin: 0; font-size: 16px; color: var(--text); }
+.dialogMeta { margin: -6px 0 0; font-family: var(--mono); font-size: 11px; color: var(--text-faint); }
+.field { display: flex; flex-direction: column; gap: 4px; font-size: 12px; color: var(--text-muted); }
+.field em { color: var(--negative); font-style: normal; }
+.field input, .field textarea {
+  font: inherit;
+  font-size: 13px;
+  color: var(--text);
+  background: var(--surface);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--r-sm);
+  padding: 7px 9px;
+  resize: vertical;
+}
+.field input:focus-visible, .field textarea:focus-visible { outline: 2px solid var(--accent); outline-offset: 0; }
+.field small { align-self: flex-end; font-family: var(--mono); font-size: 10px; color: var(--text-faint); }
+.check { display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--text-muted); }
+.check input { accent-color: var(--accent); }
+.dialogError { margin: 0; font-size: 12px; color: var(--negative); }
+.dialogActions { display: flex; justify-content: flex-end; gap: 8px; }
+
+/* ---- toast ---- */
+.toastSlot {
+  position: absolute;
+  left: 50%;
+  bottom: 14px;
+  translate: -50% 0;
+  z-index: var(--z-popover);
+  pointer-events: none;
+}
+.toast {
+  position: relative;
+  overflow: hidden;
+  pointer-events: auto;
+  padding: 8px 14px 10px;
+  background: var(--surface-3);
+  color: var(--text);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--r-md);
+  box-shadow: var(--shadow-lg);
+  font-size: 12.5px;
+  white-space: nowrap;
+  cursor: pointer;
+}
+.toast[data-tone="error"] { border-color: var(--negative); }
+.toastBar {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 2px;
+  background: var(--accent);
+  transform-origin: left center;
+}
+.toast[data-tone="error"] .toastBar { background: var(--negative); }
+
+/* Phones: a 36px vertical rail beside the plot left ~150px of chart once the
+   plan's price labels took their share. The rail becomes a wrapping row
+   above the canvas instead, and flyouts drop down from the rail's own left
+   edge so they stay on screen. */
+@media (max-width: 560px) {
+  .rail {
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-self: stretch;
+  }
+  .railSep { width: 1px; height: 18px; margin: 0 3px; align-self: center; }
+  .flyout {
+    left: 0;
+    top: calc(100% + 6px);
+    max-width: calc(100vw - 32px);
+    transform-origin: left top;
+  }
+  /* A group near the right edge opens its flyout leftwards (DrawingRail
+     sets data-align when the default would run off screen). */
+  .flyout[data-align="end"] { left: auto; right: 0; transform-origin: right top; }
+}
+
+@media (pointer: coarse) {
+  .railBtn { width: var(--tap); height: var(--tap); }
+}

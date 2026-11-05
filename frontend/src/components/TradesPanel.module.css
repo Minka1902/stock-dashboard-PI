@@ -1,0 +1,176 @@
+.panel {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  overflow: hidden;
+}
+
+.head {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--s-3);
+  padding: var(--s-3) var(--s-4);
+  border-bottom: 1px solid var(--grid);
+}
+
+.title {
+  font-family: var(--mono);
+  font-size: 13px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.subtitle {
+  margin-top: 3px;
+  color: var(--text-faint);
+  font-family: var(--mono);
+  font-size: 11px;
+}
+
+.tableWrap {
+  overflow-x: auto;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-family: var(--mono);
+  font-size: 12.5px;
+  font-variant-numeric: tabular-nums;
+}
+
+.table thead th.num {
+  text-align: right;
+}
+.table thead th {
+  position: sticky;
+  z-index: var(--z-sticky);
+  top: 0;
+  text-align: left;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: var(--text-faint);
+  background: var(--surface-2);
+  padding: 8px var(--s-4);
+  white-space: nowrap;
+  border-bottom: 1px solid var(--border);
+}
+
+.table tbody td {
+  padding: 8px var(--s-4);
+  border-top: 1px solid var(--grid);
+  vertical-align: middle;
+}
+
+.table tbody tr:nth-child(even) {
+  background: color-mix(in oklab, var(--surface-2) 40%, transparent);
+}
+.table tbody tr:hover {
+  background: var(--surface-3);
+}
+
+.num {
+  text-align: right;
+  white-space: nowrap;
+}
+
+.ticker {
+  font-family: var(--mono);
+  font-weight: 700;
+  color: var(--accent-text);
+  text-decoration: none;
+}
+.ticker:hover {
+  text-decoration: underline;
+}
+
+.badge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: var(--r-xs);
+  font-family: var(--mono);
+  font-size: 10.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+  background: var(--surface-2);
+}
+.badge[data-tone="buy"] {
+  color: var(--positive);
+  background: var(--positive-weak);
+  border-color: transparent;
+}
+.badge[data-tone="sell"] {
+  color: var(--negative);
+  background: var(--negative-weak);
+  border-color: transparent;
+}
+
+.insider {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  max-width: 260px;
+}
+.owner {
+  font-weight: 600;
+  color: var(--text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.role {
+  font-size: 11px;
+  color: var(--text-faint);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.muted {
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+.empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: var(--s-2);
+  padding: 56px var(--s-5);
+}
+.emptyIcon {
+  display: grid;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  border-radius: var(--r-sm);
+  background: var(--accent-weak);
+  color: var(--accent-text);
+}
+.emptyTitle {
+  font-family: var(--mono);
+  font-weight: 600;
+  color: var(--text);
+}
+.emptyBtn {
+  margin-top: var(--s-2);
+  padding: 8px 16px;
+  border-radius: var(--r-sm);
+  border: 1px solid var(--accent-weak);
+  background: var(--accent-weak);
+  color: var(--accent-text);
+  font-family: var(--mono);
+  font-weight: 600;
+  cursor: pointer;
+}
+.emptyBtn:disabled {
+  opacity: 0.6;
+  cursor: default;
+}

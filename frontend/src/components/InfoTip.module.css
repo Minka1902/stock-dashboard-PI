@@ -1,0 +1,47 @@
+/* The popup itself is Tooltip's (Tooltip.module.css); this is just the "i". */
+.btn {
+  display: inline-grid;
+  place-items: center;
+  flex: none;
+  vertical-align: middle;
+  margin-inline-start: 4px;
+  border-radius: 50%;
+  border: 1px solid var(--border);
+  background: var(--surface-2);
+  color: var(--accent-text);
+  font-family: var(--sans);
+  font-size: 10px;
+  font-weight: 700;
+  font-style: italic;
+  line-height: 1;
+  text-transform: none;
+  letter-spacing: 0;
+  cursor: help;
+  padding: 0;
+  transition: border-color var(--dur-1) var(--ease-out-quart);
+}
+.btn:hover,
+.btn:focus-visible {
+  border-color: var(--accent);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .btn {
+    transition: none;
+  }
+}
+:global(html[data-reduced-motion="on"]) .btn {
+  transition: none;
+}
+
+/* The "i" stays small; on touch its hit area grows to the --tap minimum. */
+@media (pointer: coarse) {
+  /* Keep the glyph small (exempt from the global --tap minimum in index.css);
+     the invisible ::after is what grows. */
+  .btn { position: relative; min-height: 0; min-width: 0; }
+  .btn::after {
+    content: "";
+    position: absolute;
+    inset: -12px;
+  }
+}

@@ -1,0 +1,68 @@
+name: Windows installer
+
+on:
+  push:
+    tags: ["v*"]
+  pull_request:
+    paths:
+      - "windows/setup/**"
+      - "windows/Common.ps1"
+      - ".github/workflows/installer.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Read version
+        id: version
+        shell: pwsh
+        run: |
+          $m = Select-String -Path backend/app/version.py -Pattern '^__version__\s*=\s*"([^"]+)"'
+          if (-not $m) { throw 'no __version__ in backend/app/version.py' }
+          "value=$($m.Matches[0].Groups[1].Value)" >> $env:GITHUB_OUTPUT
+
+      # nssm.exe becomes the service host with SYSTEM rights, so it is only
+      # bundled when it matches the checksum pinned in windows/Common.ps1.
+      - name: Fetch NSSM (checksum-pinned)
+        shell: pwsh
+        run: |
+          $common = Get-Content windows/Common.ps1 -Raw
+          $url = [regex]::Match($common, "NssmUrl\s*=\s*'([^']+)'").Groups[1].Value
+          $pin = [regex]::Match($common, "NssmSha256\s*=\s*'([^']*)'").Groups[1].Value
+          if (-not $pin) {
+            throw "No NSSM checksum is pinned. Verify $url by hand, then set `$script:NssmSha256 in windows/Common.ps1."
+          }
+          foreach ($attempt in 1..4) {
+            try { Invoke-WebRequest $url -OutFile nssm.zip; break }
+            catch { if ($attempt -eq 4) { throw }; Start-Sleep -Seconds ([math]::Pow(2, $attempt)) }
+          }
+          $hash = (Get-FileHash nssm.zip -Algorithm SHA256).Hash
+          if ($hash -ne $pin) { throw "NSSM checksum mismatch: expected $pin, got $hash" }
+          Expand-Archive nssm.zip -DestinationPath nssm
+          $exe = Get-ChildItem nssm -Recurse -Filter nssm.exe | Where-Object FullName -match '\\win64\\' | Select-Object -First 1
+          Copy-Item $exe.FullName windows/setup/nssm.exe
+
+      - name: Build SignalSetup.exe
+        shell: pwsh
+        run: |
+          $iscc = "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe"
+          if (-not (Test-Path $iscc)) { choco install innosetup -y --no-progress }
+          & $iscc "/DAppVersion=${{ steps.version.outputs.value }}" windows/setup/SignalSetup.iss
+          if ($LASTEXITCODE -ne 0) { throw "ISCC failed (exit $LASTEXITCODE)" }
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: SignalSetup
+          path: windows/setup/Output/SignalSetup.exe
+
+      - name: Attach to release
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: windows/setup/Output/SignalSetup.exe

@@ -1,0 +1,43 @@
+.group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.tab {
+  position: relative;
+  appearance: none;
+  border: 1px solid var(--grid);
+  border-radius: var(--r-s, var(--r-sm));
+  background: transparent;
+  color: var(--text-muted);
+  font-family: var(--mono);
+  font-size: 10.5px;
+  letter-spacing: 0.04em;
+  padding: 4px 10px;
+  cursor: pointer;
+  /* The indicator is absolutely positioned inside; isolate keeps it behind the
+     label without leaking a stacking context onto the whole strip. */
+  isolation: isolate;
+}
+.tab:hover { color: var(--text); background: var(--surface-hover); }
+.tab:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+.tab[data-active="yes"] { color: var(--accent-text); border-color: transparent; }
+
+.indicator {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: var(--accent-weak);
+  z-index: -1;
+}
+
+.label { position: relative; }
+
+.badge {
+  margin-left: 6px;
+  font-size: 9.5px;
+  color: var(--text-faint);
+  font-variant-numeric: tabular-nums;
+}
+.tab[data-active="yes"] .badge { color: var(--accent-text); }

@@ -1,0 +1,247 @@
+.bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s-4);
+  padding: var(--s-3) var(--s-5);
+  min-height: 56px;
+}
+
+.left {
+  display: flex;
+  align-items: baseline;
+  gap: var(--s-3);
+  min-width: 0;
+}
+
+.title {
+  font-family: var(--mono);
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  color: var(--text);
+  white-space: nowrap;
+}
+
+.status {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--mono);
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  color: var(--text-faint);
+}
+.dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--text-faint);
+}
+.status[data-live="yes"] {
+  color: var(--positive);
+}
+.status[data-live="yes"] .dot {
+  background: var(--positive);
+  box-shadow: 0 0 8px var(--positive);
+  animation: pulse 2.4s var(--ease-out-quart) infinite;
+}
+.since {
+  color: var(--text-faint);
+  font-weight: 400;
+  letter-spacing: 0.02em;
+}
+
+.actions {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  /* `flex: none` alone made this row wider than the viewport on a phone,
+     pushing the page into horizontal scroll. It may shrink and wrap now. */
+  flex: 0 1 auto;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  min-width: 0;
+}
+
+.lean {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 34px;
+  padding: 0 12px;
+  border-radius: var(--r-sm);
+  border: 1px solid var(--border);
+  background: var(--surface-2);
+  font-family: var(--mono);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text);
+}
+.leanCap {
+  font-size: 9.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.09em;
+  color: var(--text-faint);
+}
+/* Keyed on the derived tone rather than the lean word: the vocabulary lives in
+   lib/lean.js, and the old GREEDY→green rule contradicted its own read line
+   ("crowd is greedy — a time to trim"). */
+.lean[data-tone="pos"] { color: var(--positive); border-color: var(--positive-weak); }
+.lean[data-tone="neg"] { color: var(--negative); border-color: var(--negative-weak); }
+
+.cmd {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 34px;
+  padding: 0 10px;
+  border-radius: var(--r-sm);
+  border: 1px solid var(--border);
+  background: var(--surface-2);
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: color var(--dur-1) var(--ease-out-quart), border-color var(--dur-1) var(--ease-out-quart);
+}
+.cmd:hover { color: var(--text); border-color: var(--border-strong); }
+.cmd kbd {
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.iconBtn {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border: 1px solid var(--border);
+  background: var(--surface-2);
+  border-radius: var(--r-sm);
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: color var(--dur-1) var(--ease-out-quart), border-color var(--dur-1) var(--ease-out-quart);
+}
+.iconBtn:hover { color: var(--text); border-color: var(--border-strong); }
+.iconBtn[data-active="yes"] { color: var(--accent-text); border-color: var(--accent-weak); }
+
+/* theme switcher popover */
+.themeWrap { position: relative; }
+/* Position and z-index come from Popover. */
+.themeMenu {
+  width: 214px;
+  padding: var(--s-1);
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  background: var(--surface);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--r-md);
+  box-shadow: var(--shadow-lg);
+  transform-origin: top right;
+}
+.themeItem {
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+  padding: 7px 8px;
+  border: none;
+  background: transparent;
+  border-radius: var(--r-sm);
+  color: var(--text);
+  cursor: pointer;
+  text-align: left;
+}
+.themeItem:hover { background: var(--surface-2); }
+.themeItem[data-active="yes"] { background: var(--accent-weak); }
+.themeSwatch {
+  flex: none;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  border: 1px solid var(--border-strong);
+}
+.themeItemText { display: flex; flex-direction: column; line-height: 1.25; }
+.themeItemLabel { font-size: 13px; font-weight: 600; }
+.themeItemHint {
+  font-family: var(--mono);
+  font-size: 10.5px;
+  color: var(--text-faint);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.refresh {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 34px;
+  padding: 0 14px;
+  border-radius: var(--r-sm);
+  border: 1px solid var(--accent-weak);
+  background: var(--accent-weak);
+  color: var(--accent-text);
+  font-family: var(--mono);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+  transition: background var(--dur-1) var(--ease-out-quart);
+}
+.refresh:hover:not(:disabled) { background: color-mix(in oklab, var(--accent) 26%, transparent); }
+.refresh:disabled { opacity: 0.6; cursor: default; }
+.spin {
+  display: inline-flex;
+  animation: spin 0.9s linear infinite;
+}
+
+@keyframes spin { to { transform: rotate(360deg); } }
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.35; }
+}
+
+@media (max-width: 760px) {
+  .status .since, .lean .leanCap { display: none; }
+  .title { font-size: 16px; }
+}
+
+.phoneOnly { display: none; }
+
+/* On a phone the bar is one row: title, search, alerts, account. Refresh,
+   theme, dyslexia and the tour move into the account menu (UserMenu
+   phoneItems); the lean is the first thing on the Sentiment page, and the
+   ⌘K button becomes a search icon (there is no keyboard to press). */
+@media (max-width: 640px) {
+  .lean, .cmd, .desktopOnly { display: none; }
+  .phoneOnly { display: grid; }
+  .bar { padding: var(--s-2) var(--s-3); gap: var(--s-2); min-height: 52px; }
+  .left { flex: 1 1 auto; min-width: 0; }
+  .title { overflow: hidden; text-overflow: ellipsis; font-size: 15px; }
+  .actions { flex: none; flex-wrap: nowrap; gap: var(--s-1); }
+}
+
+@media (pointer: coarse) {
+  .iconBtn { width: var(--tap); height: var(--tap); }
+  .refresh, .cmd, .lean { height: var(--tap); }
+}
+
+.user {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-1);
+  padding-left: var(--s-2);
+  border-left: 1px solid var(--border);
+}
+.userEmail {
+  color: var(--text-faint);
+  font-size: 0.82em;
+  max-width: 160px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+@media (max-width: 960px) {
+  .userEmail { display: none; }
+}

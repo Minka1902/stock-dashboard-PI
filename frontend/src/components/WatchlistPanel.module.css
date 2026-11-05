@@ -1,0 +1,382 @@
+.panel {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  box-shadow: var(--shadow);
+  overflow: hidden;
+}
+
+.head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--s-3);
+  padding: var(--s-5);
+  border-bottom: 1px solid var(--border);
+}
+
+.title {
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.subtitle {
+  margin-top: 4px;
+  color: var(--text-muted);
+  font-size: 12.5px;
+}
+
+.tabs {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--s-2);
+  padding: var(--s-3) var(--s-5);
+  border-bottom: 1px solid var(--border);
+}
+.tabWrap {
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid var(--border);
+  border-radius: var(--r-pill);
+  overflow: hidden;
+}
+.tabWrap[data-active="yes"] {
+  border-color: var(--accent);
+  background: var(--accent-weak);
+}
+.tab {
+  appearance: none;
+  border: none;
+  background: transparent;
+  color: var(--text-muted);
+  font: inherit;
+  font-size: 12.5px;
+  /* List names always read as uppercase labels; the stored name keeps its
+     original casing so the rename field shows what was typed. */
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 5px 12px;
+  cursor: pointer;
+}
+.tabWrap[data-active="yes"] .tab { color: var(--accent-text); font-weight: 600; }
+.tabMenu { margin-right: 3px; }
+.newTab {
+  appearance: none;
+  border: 1px dashed var(--border);
+  background: transparent;
+  color: var(--text-muted);
+  font: inherit;
+  font-size: 12px;
+  padding: 5px 12px;
+  border-radius: var(--r-pill);
+  cursor: pointer;
+}
+.newTab:hover { color: var(--accent-text); border-color: var(--accent); }
+.tabInput {
+  border: 1px solid var(--accent);
+  border-radius: var(--r-pill);
+  background: var(--surface-2);
+  color: var(--text);
+  font: inherit;
+  font-size: 12.5px;
+  padding: 5px 12px;
+  width: 140px;
+}
+
+/* Deleting a list cascades its tickers, so it asks first. */
+.confirm {
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+  flex-wrap: wrap;
+  margin: 0 var(--s-5) var(--s-4);
+  padding: var(--s-3) var(--s-4);
+  border: 1px solid var(--negative-weak);
+  border-radius: var(--r-md);
+  background: var(--negative-weak);
+}
+.confirmText { flex: 1; min-width: 220px; font-size: 13px; color: var(--text); }
+.confirmCancel,
+.confirmGo {
+  appearance: none;
+  border-radius: var(--r-sm);
+  font: inherit;
+  font-size: 12.5px;
+  padding: 6px 14px;
+  cursor: pointer;
+}
+.confirmCancel { border: 1px solid var(--border); background: var(--surface-2); color: var(--text); }
+.confirmGo { border: 1px solid transparent; background: var(--negative); color: var(--on-negative); font-weight: 600; }
+.confirmCancel:hover { border-color: var(--border-strong); }
+.confirmGo:hover { filter: brightness(1.08); }
+
+.form {
+  display: flex;
+  gap: var(--s-2);
+  padding: var(--s-4) var(--s-5);
+  border-bottom: 1px solid var(--border);
+  flex-wrap: wrap;
+}
+
+.ticker,
+.note {
+  height: 38px;
+  padding: 0 12px;
+  border-radius: var(--r-sm);
+  border: 1px solid var(--border-strong);
+  background: var(--bg);
+  color: var(--text);
+  font-size: 14px;
+}
+.ticker {
+  width: 150px;
+  font-family: var(--mono);
+  text-transform: uppercase;
+}
+.note {
+  flex: 1;
+  min-width: 160px;
+}
+.ticker:focus,
+.note:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-weak);
+}
+
+.add {
+  height: 38px;
+  padding: 0 18px;
+  border-radius: var(--r-sm);
+  border: none;
+  background: var(--accent);
+  color: var(--on-accent);
+  font-weight: 600;
+  cursor: pointer;
+}
+.add:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+
+.error {
+  padding: 8px var(--s-5);
+  color: var(--negative);
+  font-size: 13px;
+}
+
+.list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.item {
+  display: flex;
+  align-items: center;
+  gap: var(--s-4);
+  padding: 12px var(--s-5);
+  border-top: 1px solid var(--border);
+  background: var(--surface);
+}
+.item:first-child {
+  border-top: none;
+}
+.item:hover {
+  background: var(--surface-hover);
+}
+/* While dragging, the row is lifted above its neighbours. Without an explicit
+   background it would be transparent and the rows beneath would show through. */
+.item[data-dragging="true"] {
+  background: var(--surface-3);
+  box-shadow: var(--shadow-lg);
+  border-radius: var(--r-sm);
+  cursor: grabbing;
+}
+
+/* Drag handle: quiet until the row is hovered or the handle is focused, so it
+   doesn't compete with the ticker for attention on a dense list. */
+.handle {
+  appearance: none;
+  border: none;
+  background: transparent;
+  padding: 2px;
+  margin-left: calc(var(--s-3) * -1);
+  display: inline-flex;
+  align-items: center;
+  color: var(--text-faint);
+  opacity: 0;
+  cursor: grab;
+  touch-action: none; /* let the pointer drag instead of scrolling the page */
+  transition: opacity 120ms ease, color 120ms ease;
+}
+.item:hover .handle,
+.handle:focus-visible {
+  opacity: 1;
+}
+.handle:hover { color: var(--text); }
+.handle:active { cursor: grabbing; }
+.handle:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: var(--r-xs);
+  color: var(--accent-text);
+}
+@media (hover: none) {
+  /* No hover on touch — the handle has to be permanently visible. */
+  .handle { opacity: 1; }
+}
+
+.headerTools { display: inline-flex; align-items: center; gap: var(--s-3); }
+.resetOrder {
+  appearance: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  border: 1px solid var(--border);
+  background: var(--surface-2);
+  border-radius: var(--r-sm);
+  padding: 4px 9px;
+  color: var(--text-muted);
+  font-family: var(--mono);
+  font-size: 10.5px;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+}
+.resetOrder:hover { color: var(--text); border-color: var(--border-strong); }
+
+/* Visually hidden, still announced. */
+.srOnly {
+  position: absolute;
+  width: 1px; height: 1px;
+  padding: 0; margin: -1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.symbol {
+  font-family: var(--mono);
+  font-weight: 700;
+  color: var(--accent-text);
+  min-width: 70px;
+}
+
+/* Ticker as a button: opens the chart workspace for that symbol. */
+.symbolBtn {
+  /* The width lives on the button: the label inside is inline, where
+     min-width does nothing, so "TEVA.TA" shifted every column after it. */
+  min-width: 84px;
+  appearance: none;
+  border: none;
+  background: transparent;
+  padding: 0;
+  cursor: pointer;
+  text-align: left;
+}
+.symbolBtn:hover .symbol { text-decoration: underline; }
+.symbolBtn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: var(--r-xs); }
+
+.price {
+  min-width: 84px;
+  text-align: right;
+  font-family: var(--mono);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  color: var(--text);
+}
+
+.change {
+  min-width: 64px;
+  text-align: right;
+  font-size: 12.5px;
+  font-variant-numeric: tabular-nums;
+}
+.change[data-tone="pos"]  { color: var(--positive); }
+.change[data-tone="neg"]  { color: var(--negative); }
+.change[data-tone="flat"] { color: var(--text-muted); }
+
+.state {
+  min-width: 46px;
+  padding: 1px 6px;
+  border-radius: var(--r-pill);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-align: center;
+}
+.state[data-state="LIVE"]   { background: var(--positive-weak); color: var(--positive); }
+.state[data-state="PRE"],
+.state[data-state="POST"]   { background: var(--accent-weak); color: var(--accent-text); }
+.state[data-state="CLOSED"] { border: 1px solid var(--border); color: var(--text-faint); }
+.state[data-state="none"]   { visibility: hidden; }
+
+/* The note is click-to-edit, so it's a button styled to read as plain text
+   until you hover it. */
+.itemNote {
+  flex: 1;
+  min-width: 0;
+  appearance: none;
+  border: 1px solid transparent;
+  border-radius: var(--r-sm);
+  background: none;
+  padding: 4px 8px;
+  margin: -4px 0;
+  color: var(--text);
+  font: inherit;
+  text-align: left;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  cursor: text;
+}
+.itemNote:hover { border-color: var(--border); background: var(--surface-2); }
+.itemNote:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+
+.noteInput {
+  flex: 1;
+  min-width: 0;
+  padding: 4px 8px;
+  margin: -4px 0;
+  border: 1px solid var(--accent);
+  border-radius: var(--r-sm);
+  background: var(--bg);
+  color: var(--text);
+  font: inherit;
+}
+
+.added {
+  color: var(--text-faint);
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+
+.empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 6px;
+  padding: 48px var(--s-5);
+}
+.emptyIcon {
+  display: grid;
+  place-items: center;
+  width: 52px;
+  height: 52px;
+  border-radius: var(--r-md);
+  background: var(--accent-weak);
+  color: var(--accent-text);
+  margin-bottom: var(--s-2);
+}
+.emptyTitle {
+  font-weight: 600;
+  color: var(--text);
+}
+.emptyText {
+  color: var(--text-muted);
+  font-size: 13px;
+}

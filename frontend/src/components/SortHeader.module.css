@@ -1,0 +1,25 @@
+/* Transparent button that inherits the host <th>'s type styles so a sortable
+   header looks identical to a static one until hovered/active. */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 0;
+  margin: 0;
+  background: none;
+  border: 0;
+  font: inherit;
+  letter-spacing: inherit;
+  text-transform: inherit;
+  color: inherit;
+  cursor: pointer;
+}
+.btn:hover { color: var(--text); }
+.btn[data-active="yes"] { color: var(--accent-text); }
+
+.caret {
+  font-size: 0.85em;
+  opacity: 0.55;
+}
+.btn:hover .caret,
+.btn[data-active="yes"] .caret { opacity: 1; }

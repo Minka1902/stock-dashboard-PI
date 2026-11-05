@@ -1,0 +1,38 @@
+.toggle {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  margin: -2px 0 0 -4px;
+  border: none;
+  background: transparent;
+  border-radius: var(--r-sm);
+  color: var(--text-muted);
+  cursor: pointer;
+}
+.toggle:hover {
+  background: var(--surface-hover);
+  color: var(--text);
+}
+
+.chevron {
+  transition: transform 0.15s ease;
+}
+/* Open = chevron points up; collapsed = points right. */
+.chevron[data-collapsed="no"] {
+  transform: rotate(180deg);
+}
+.chevron[data-collapsed="yes"] {
+  transform: rotate(-90deg);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .chevron {
+    transition: none;
+  }
+}
+
+@media (pointer: coarse) {
+  .toggle { width: var(--tap); height: var(--tap); }
+}

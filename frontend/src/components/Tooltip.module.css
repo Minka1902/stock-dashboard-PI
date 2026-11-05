@@ -1,0 +1,132 @@
+/* Portaled to <body>, so it sits in the root stacking context; --z-tooltip
+   keeps it above menus, the command palette and the tour spotlight. */
+.tip {
+  position: fixed;
+  z-index: var(--z-tooltip);
+  max-width: min(300px, calc(100vw - 16px));
+  width: max-content;
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-1);
+  padding: 6px var(--s-2);
+  background: var(--surface-3);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--r-sm);
+  box-shadow: var(--shadow);
+  color: var(--text);
+  font-family: var(--sans);
+  font-size: 12.5px;
+  font-weight: 450;
+  line-height: 1.45;
+  letter-spacing: 0;
+  text-transform: none;
+  text-align: left;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  pointer-events: auto;
+}
+
+:global(html[data-dyslexia="on"]) .tip {
+  font-family: "Atkinson Hyperlegible", var(--sans);
+}
+
+.body {
+  display: block;
+}
+
+/* Title + description pairs (InfoTip) */
+.body strong {
+  display: block;
+  color: var(--text);
+  font-weight: 650;
+}
+.body :where(p) {
+  margin: 0;
+  color: var(--text-muted);
+}
+.body :where(p + p) {
+  margin-top: var(--s-1);
+}
+
+.keys {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 3px;
+  color: var(--text-faint);
+}
+.combo {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+}
+.or {
+  margin: 0 3px;
+  font-size: 11px;
+}
+.plus {
+  font-size: 10px;
+}
+
+.kbd {
+  display: inline-block;
+  min-width: 18px;
+  padding: 0 5px;
+  font-family: var(--mono);
+  font-size: 10.5px;
+  font-weight: 600;
+  line-height: 17px;
+  text-align: center;
+  color: var(--text-muted);
+  background: var(--surface-2);
+  border: 1px solid var(--border-strong);
+  border-bottom-width: 2px;
+  border-radius: var(--r-xs);
+}
+
+/* A rotated square that shares the tooltip's fill and border; the two
+   borders facing the trigger are the visible ones. */
+.arrow {
+  position: absolute;
+  width: 8px;
+  height: 8px;
+  background: var(--surface-3);
+  border: 1px solid var(--border-strong);
+  transform: rotate(45deg);
+  pointer-events: none;
+}
+.tip[data-side="top"] .arrow {
+  bottom: -5px;
+  margin-left: -4px;
+  border-top: 0;
+  border-left: 0;
+}
+.tip[data-side="bottom"] .arrow {
+  top: -5px;
+  margin-left: -4px;
+  border-bottom: 0;
+  border-right: 0;
+}
+.tip[data-side="left"] .arrow {
+  right: -5px;
+  margin-top: -4px;
+  border-bottom: 0;
+  border-left: 0;
+}
+.tip[data-side="right"] .arrow {
+  left: -5px;
+  margin-top: -4px;
+  border-top: 0;
+  border-right: 0;
+}
+
+/* Wrapper that receives pointer events for a disabled child (see Tooltip.jsx).
+   The disabled control itself must not be the hit target, or the browser
+   swallows the events before they reach the wrapper. */
+.disabledWrap {
+  display: inline-flex;
+  max-width: 100%;
+}
+.disabledWrap > * {
+  pointer-events: none;
+}

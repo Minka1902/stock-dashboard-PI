@@ -1,0 +1,280 @@
+.wrap {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-2);
+}
+
+/* ---- toolbar ---- */
+.toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--s-3);
+  padding-bottom: var(--s-1);
+}
+
+.group {
+  display: inline-flex;
+  border: 1px solid var(--grid);
+  border-radius: var(--r-s);
+  overflow: hidden;
+}
+
+.pill {
+  appearance: none;
+  border: none;
+  background: transparent;
+  color: var(--text-muted);
+  font-family: var(--mono);
+  font-size: 10.5px;
+  letter-spacing: 0.04em;
+  padding: 5px 9px;
+  cursor: pointer;
+  border-right: 1px solid var(--grid);
+}
+.pill:last-child { border-right: none; }
+.pill:hover:not(:disabled) { color: var(--text); background: var(--surface-hover); }
+.pill[data-active="yes"] {
+  color: var(--accent-text);
+  background: var(--accent-weak);
+}
+.pill:disabled { opacity: 0.35; cursor: not-allowed; }
+.pill:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+
+/* chart-type segmented control with an animated active thumb */
+.segmented {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  padding: 2px;
+  border: 1px solid var(--grid);
+  border-radius: var(--r-s);
+  background: var(--surface-2);
+}
+.segBtn {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 24px;
+  border: none;
+  background: transparent;
+  color: var(--text-muted);
+  border-radius: var(--r-xs);
+  cursor: pointer;
+}
+.segBtn:hover { color: var(--text); }
+.segBtn[data-active="yes"] { color: var(--accent-text); }
+.segBtn:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+.segThumb {
+  position: absolute;
+  inset: 0;
+  border-radius: var(--r-xs);
+  background: var(--accent-weak);
+  z-index: 0;
+}
+.segGlyph {
+  position: relative;
+  z-index: 1;
+  display: inline-flex;
+}
+
+.volExact { color: var(--text-faint); }
+
+/* ---- crosshair legend ---- */
+.legend {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--s-3);
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--text-faint);
+  padding: 2px 2px 0;
+}
+.legendTicker {
+  font-weight: 700;
+  color: var(--text);
+  letter-spacing: 0.03em;
+}
+.legend em {
+  font-style: normal;
+  color: var(--text-muted);
+}
+.legend em[data-tone="pos"] { color: var(--positive); }
+.legend em[data-tone="neg"] { color: var(--negative); }
+.legendCompare { color: var(--accent-text); }
+.overlayChip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--text-muted);
+}
+.overlayDot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  display: inline-block;
+  flex: none;
+}
+
+/* ---- states ---- */
+.message {
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+  padding: var(--s-4) 2px;
+  font-size: 12px;
+  color: var(--text-faint);
+}
+.retry {
+  appearance: none;
+  border: 1px solid var(--grid);
+  border-radius: var(--r-s);
+  background: var(--surface-2);
+  color: var(--text-muted);
+  font-family: var(--mono);
+  font-size: 10.5px;
+  padding: 4px 10px;
+  cursor: pointer;
+}
+.retry:hover { color: var(--text); background: var(--surface-hover); }
+
+/* Shown when a drawing is saved on this device but the server write failed. */
+.offlineNote {
+  align-self: center;
+  padding: 2px 7px;
+  border-radius: var(--r-xs);
+  background: var(--accent-weak);
+  color: var(--accent-text);
+  font-family: var(--mono);
+  font-size: 9.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.canvasWrap { position: relative; min-height: 0; flex: 1; min-width: 0; }
+
+/* ---- chart stage: drawing rail + canvas (WS-C) ---- */
+.stage {
+  display: flex;
+  align-items: stretch;
+  gap: var(--s-2);
+  min-width: 0;
+}
+
+/* snapshot / drafts actions, pushed to the toolbar's right edge */
+.actions {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-2);
+  margin-left: auto;
+}
+
+/* stands in for EXT where the market has no extended session */
+.pillNote {
+  align-self: center;
+  padding: 5px 9px;
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.04em;
+  color: var(--text-faint);
+  cursor: help;
+}
+.pillNote:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+
+/* PRE / REG / POST tag on the crosshair legend */
+.sessionTag {
+  padding: 0 5px;
+  border-radius: var(--r-xs);
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: var(--text-muted);
+  border: 1px solid var(--border);
+}
+.sessionTag[data-session="pre"] { color: var(--chart-info); border-color: color-mix(in oklab, var(--chart-info) 45%, transparent); }
+.sessionTag[data-session="post"] { color: var(--chart-compare); border-color: color-mix(in oklab, var(--chart-compare) 45%, transparent); }
+
+/* D/W/M: latest pre-market / after-hours print */
+.extChip { color: var(--text-faint); cursor: help; }
+.extChip[data-session="pre"] em { color: var(--chart-info); }
+.extChip[data-session="post"] em { color: var(--chart-compare); }
+
+/* shutter flash when a snapshot is taken (animated by animejs) */
+.flash {
+  position: absolute;
+  inset: 0;
+  background: var(--text);
+  opacity: 0;
+  pointer-events: none;
+  z-index: var(--z-raised);
+}
+.canvas { min-height: 0; }
+
+/* ---- transition loader (Task 5) ---- */
+.loader {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--s-3);
+  background: color-mix(in oklab, var(--bg) 55%, transparent);
+  backdrop-filter: blur(1.5px);
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--text-muted);
+  z-index: var(--z-raised);
+  pointer-events: none;
+}
+.spinner {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  border: 2px solid var(--border-strong);
+  border-top-color: var(--accent);
+  animation: chartspin 0.7s linear infinite;
+}
+@keyframes chartspin { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { .spinner { animation-duration: 1.6s; } }
+
+/* ---- indicator key ---- */
+.key {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-3);
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--text-faint);
+  margin: 0;
+  padding-top: 2px;
+}
+.key span[data-c="info"] { color: var(--chart-info); }
+.key span[data-c="accent"] { color: var(--accent-text); }
+.key span[data-c="muted"] { color: var(--chart-muted); }
+.key span[data-c="neg"] { color: var(--chart-down); }
+.key span[data-c="pos"] { color: var(--chart-up); }
+.key span[data-c="cmp"] { color: var(--chart-compare); }
+.keyNote { color: var(--text-faint); }
+
+/* Currency of the chart's prices (₪ ILS for Tel Aviv listings). */
+.legendCcy {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  padding: 0 5px;
+  border-radius: var(--r-xs);
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+}
+
+/* Phones: the drawing rail sits above the canvas (see ChartTools.module.css). */
+@media (max-width: 560px) {
+  .stage { flex-direction: column; }
+}
+
+@media (pointer: coarse) {
+  .segBtn { width: 36px; height: 36px; }
+}

@@ -1,0 +1,162 @@
+.overlay {
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-overlay);
+  background: var(--scrim);
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding-top: 14vh;
+  animation: fade var(--dur-2) var(--ease-out-quart);
+}
+
+.panel {
+  width: min(560px, 92vw);
+  background: var(--surface-3);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--r-lg);
+  box-shadow: var(--shadow);
+  overflow: hidden;
+  animation: rise var(--dur-3) var(--ease-out-expo);
+}
+
+.searchRow {
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+  padding: var(--s-4);
+  border-bottom: 1px solid var(--border);
+  color: var(--text-faint);
+}
+
+.input {
+  flex: 1;
+  border: none;
+  background: transparent;
+  color: var(--text);
+  font-family: var(--mono);
+  font-size: 15px;
+  outline: none;
+}
+.input::placeholder {
+  color: var(--text-faint);
+}
+
+.kbd {
+  font-family: var(--mono);
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-faint);
+  padding: 3px 6px;
+  border: 1px solid var(--border);
+  border-radius: var(--r-xs);
+}
+
+.list {
+  list-style: none;
+  margin: 0;
+  padding: var(--s-2);
+  max-height: 46vh;
+  overflow-y: auto;
+}
+
+.empty {
+  padding: var(--s-4);
+  text-align: center;
+  color: var(--text-faint);
+  font-family: var(--mono);
+  font-size: 13px;
+}
+
+.item {
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+  width: 100%;
+  padding: 10px var(--s-3);
+  border: none;
+  background: transparent;
+  border-radius: var(--r-sm);
+  color: var(--text-muted);
+  cursor: pointer;
+  text-align: left;
+}
+.item > svg:last-child {
+  margin-left: auto;
+  opacity: 0;
+  color: var(--accent-text);
+}
+.itemActive {
+  background: var(--accent-weak);
+  color: var(--text);
+}
+.itemActive > svg:last-child {
+  opacity: 1;
+}
+
+.itemLabel {
+  font-family: var(--mono);
+  font-size: 14px;
+  font-weight: 600;
+}
+.itemHint {
+  font-family: var(--mono);
+  font-size: 10.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: var(--text-faint);
+}
+
+@keyframes fade {
+  from { opacity: 0; }
+}
+@keyframes rise {
+  from { opacity: 0; transform: translateY(8px) scale(0.98); }
+}
+
+.section {
+  padding: var(--s-2) var(--s-3) var(--s-1);
+  color: var(--text-faint);
+  font-size: 0.72em;
+  text-transform: uppercase;
+  letter-spacing: var(--caption-spacing);
+  border-top: 1px solid var(--border);
+  margin-top: var(--s-1);
+}
+/* The first heading in the list sits right under the market row's own
+   divider — a second rule there read as a double line. */
+.list > li:first-child .section { border-top: none; margin-top: 0; }
+
+/* Market filter for the stock search. */
+.marketRow {
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+  padding: var(--s-2) var(--s-4);
+  border-bottom: 1px solid var(--border);
+}
+.marketLabel {
+  font-family: var(--mono);
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: var(--text-faint);
+}
+.marketBadge {
+  flex: none;
+  font-family: var(--mono);
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  padding: 1px 6px;
+  border-radius: var(--r-xs);
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+}
+.marketBadge[data-market="TASE"] {
+  color: var(--info);
+  background: var(--info-weak);
+  border-color: transparent;
+}

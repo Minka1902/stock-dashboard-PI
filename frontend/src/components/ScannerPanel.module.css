@@ -1,0 +1,48 @@
+.root { container-type: inline-size; display: flex; flex-direction: column; }
+.controls { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--s-2) var(--s-3); padding: var(--s-3) var(--s-4); }
+.filters { max-width: 100%; }
+.check { display: flex; align-items: center; gap: var(--s-2); font-size: 12.5px; color: var(--text-muted); }
+.empty { padding: var(--s-3) var(--s-4); font-size: 12.5px; color: var(--text-faint); }
+.wrap { overflow-x: auto; position: relative; }
+.srOnly { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+.table { width: 100%; border-collapse: collapse; font-family: var(--mono); font-size: 12px; font-variant-numeric: tabular-nums; }
+.table th {
+  text-align: left; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.07em;
+  color: var(--text-faint); background: var(--surface-2); padding: 6px var(--s-3); white-space: nowrap;
+  border-bottom: 1px solid var(--border);
+}
+.table td { padding: 7px var(--s-3); border-top: 1px solid var(--grid); vertical-align: middle; white-space: nowrap; }
+.table tr[data-current="no"] td { opacity: 0.6; }
+.num { text-align: right; }
+.faint { color: var(--text-faint); }
+.ticker { appearance: none; border: none; background: none; padding: 0; font: inherit; font-weight: 700; color: var(--accent-text); cursor: pointer; }
+.ticker:hover { text-decoration: underline; }
+.chip {
+  display: inline-block; margin: 1px 4px 1px 0; padding: 1px 7px; border-radius: var(--r-xs);
+  border: 1px solid var(--border); font-size: 10px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: 0.04em; color: var(--text-muted);
+}
+td[data-tone="up"] { color: var(--positive); }
+td[data-tone="down"] { color: var(--negative); }
+.actions { text-align: right; }
+.actions > * + * { margin-left: var(--s-2); }
+
+@container (max-width: 640px) {
+  .wrap { overflow: visible; }
+  .table thead { display: none; }
+  .table, .table tbody { display: block; }
+  .table tr {
+    display: grid; grid-template-columns: auto 1fr auto auto;
+    grid-template-areas: "ticker metric price change" "scans scans scans scans" "first first actions actions";
+    column-gap: var(--s-2); row-gap: 4px; padding: var(--s-2) var(--s-3); border-top: 1px solid var(--grid);
+  }
+  .table td { padding: 0; border: none; }
+  .table td[data-col="ticker"] { grid-area: ticker; }
+  .table td[data-col="scans"] { grid-area: scans; white-space: normal; }
+  .table td[data-col="price"] { grid-area: price; }
+  .table td[data-col="change"] { grid-area: change; }
+  .table td[data-col="metric"] { grid-area: metric; text-align: left; }
+  .table td[data-col="first"] { grid-area: first; font-size: 10.5px; align-self: center; }
+  .table td[data-col="actions"] { grid-area: actions; }
+}
+@media (max-width: 640px) { .controls, .empty { padding-inline: var(--s-3); } }

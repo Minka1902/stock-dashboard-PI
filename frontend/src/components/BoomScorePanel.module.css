@@ -1,0 +1,212 @@
+.panel {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  box-shadow: var(--shadow);
+  overflow: hidden;
+}
+
+.head {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--s-3);
+  padding: var(--s-5);
+  border-bottom: 1px solid var(--border);
+}
+
+.title {
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.subtitle {
+  margin-top: 4px;
+  color: var(--text-muted);
+  font-size: 12.5px;
+}
+
+.list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+  padding: 14px var(--s-5);
+  border-top: 1px solid var(--border);
+  flex-wrap: wrap;
+}
+
+.row:hover {
+  background: var(--surface-hover);
+}
+
+.rank {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-faint);
+  min-width: 20px;
+  text-align: right;
+}
+
+.ticker {
+  font-family: var(--mono);
+  font-weight: 700;
+  font-size: 14px;
+  color: var(--accent-text);
+  /* Fits a TASE symbol ("TEVA.TA") so the bars and chips stay in line. */
+  min-width: 84px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.earningsWarn {
+  font-size: 11px;
+  color: var(--caution);
+  cursor: help;
+}
+
+.barWrap {
+  flex: 1;
+  min-width: 80px;
+  max-width: 200px;
+  height: 6px;
+  background: var(--surface-2);
+  border-radius: var(--r-pill);
+  overflow: hidden;
+}
+
+.bar {
+  height: 100%;
+  border-radius: var(--r-pill);
+  transition: width 0.4s ease;
+  background: var(--text-faint);
+}
+.bar[data-tone="high"]  { background: var(--positive); }
+.bar[data-tone="mid"]   { background: var(--caution); }
+.bar[data-tone="low"]   { background: var(--accent); }
+.bar[data-tone="faint"] { background: var(--text-faint); }
+.bar[data-tone="neg"]   { background: var(--negative); }
+
+.scoreBadge {
+  font-weight: 700;
+  font-size: 14px;
+  min-width: 36px;
+  text-align: right;
+  color: var(--text-muted);
+}
+.scoreBadge[data-tone="high"]  { color: var(--positive); }
+.scoreBadge[data-tone="mid"]   { color: var(--caution); }
+.scoreBadge[data-tone="low"]   { color: var(--accent-text); }
+.scoreBadge[data-tone="neg"]   { color: var(--negative); }
+
+.tier {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: var(--r-pill);
+  background: var(--surface-2);
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+.tier[data-tone="high"]  { background: var(--positive-weak); color: var(--positive); }
+.tier[data-tone="mid"]   { background: var(--caution-weak); color: var(--caution); }
+.tier[data-tone="low"]   { background: var(--accent-weak); color: var(--accent-text); }
+.tier[data-tone="neg"]   { background: var(--negative-weak); color: var(--negative); }
+
+.sparkWrap {
+  display: inline-flex;
+  align-items: center;
+}
+
+.mixedWarn {
+  font-size: 13px;
+  cursor: help;
+  color: var(--caution);
+}
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 2px 8px;
+  border-radius: var(--r-pill);
+  font-size: 11px;
+  font-weight: 600;
+  background: var(--accent-weak);
+  color: var(--accent-text);
+  cursor: help;
+}
+.chip[data-tone="bear"] {
+  background: var(--negative-weak);
+  color: var(--negative);
+}
+
+.horizon {
+  font-size: 9px;
+  font-weight: 700;
+  opacity: 0.7;
+  letter-spacing: 0.02em;
+}
+
+.empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: var(--s-2);
+  padding: 56px var(--s-5);
+}
+
+.emptyIcon {
+  display: grid;
+  place-items: center;
+  width: 52px;
+  height: 52px;
+  border-radius: var(--r-md);
+  background: var(--accent-weak);
+  color: var(--accent-text);
+}
+
+.emptyTitle {
+  font-weight: 600;
+  color: var(--text);
+}
+
+.emptyHint {
+  color: var(--text-muted);
+  font-size: 13px;
+}
+
+.emptyBtn {
+  margin-top: var(--s-2);
+  padding: 8px 16px;
+  border-radius: var(--r-sm);
+  border: none;
+  background: var(--accent);
+  color: var(--on-accent);
+  font-weight: 600;
+  cursor: pointer;
+}
+.emptyBtn:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+/* Score rescaled because some components can't apply (TASE listings). */
+.chip[data-tone="neutral"] {
+  color: var(--info);
+  background: var(--info-weak);
+  border-color: transparent;
+  cursor: help;
+}

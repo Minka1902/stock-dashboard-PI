@@ -1,9 +1,9 @@
 """Path resolution must not depend on the cwd.
 
-The Windows service starts in C:\\Windows\\system32. A cwd-relative DB default
-would silently create a second, empty database there, and the app would come up
-reporting healthy with none of your data in it — the worst kind of failure,
-because nothing errors. These guard against that regressing.
+systemd starts a service in / unless told otherwise. A cwd-relative DB default
+would silently create a second, empty database wherever that is, and the app
+would come up reporting healthy with none of your data in it — the worst kind
+of failure, because nothing errors. These guard against that regressing.
 """
 import importlib
 import os
@@ -40,9 +40,9 @@ def test_db_path_default_is_backend_stocks_db(monkeypatch):
 
 
 def test_db_path_env_override_wins(monkeypatch):
-    cfg = _reload_config(monkeypatch, STOCKS_DB_PATH=r"C:\ProgramData\X\stocks.db")
+    cfg = _reload_config(monkeypatch, STOCKS_DB_PATH="/var/lib/stocks-dashboard/db/stocks.db")
     try:
-        assert cfg.DB_PATH == r"C:\ProgramData\X\stocks.db"
+        assert cfg.DB_PATH == "/var/lib/stocks-dashboard/db/stocks.db"
     finally:
         importlib.reload(config)
 
@@ -59,7 +59,7 @@ def test_connect_creates_missing_parent_dir(tmp_path):
     """The installer makes this directory, but connect() runs at import time,
     before logging exists — a missing dir would surface only as an opaque
     "unable to open database file" in the service's stderr log."""
-    target = tmp_path / "ProgramData" / "SignalDashboard" / "db" / "stocks.db"
+    target = tmp_path / "var" / "lib" / "stocks-dashboard" / "db" / "stocks.db"
     assert not target.parent.exists()
 
     conn = db.connect(str(target))

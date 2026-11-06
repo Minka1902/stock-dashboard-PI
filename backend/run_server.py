@@ -82,7 +82,7 @@ def main() -> int:
     parser.add_argument(
         "--no-supervise", action="store_true",
         help="run uvicorn in this process, without the restart loop "
-             "(what the Windows service uses — see windows/README.md)")
+             "(what pi/stocks-dashboard.service uses — systemd is the supervisor)")
     args = parser.parse_args()
 
     # Run from backend/ so the relative default STOCKS_DB_PATH resolves the same

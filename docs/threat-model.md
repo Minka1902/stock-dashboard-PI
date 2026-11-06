@@ -30,6 +30,22 @@ true before a live broker (STC-55) is connected.
    - The minute job fills resting paper orders and runs the bots.
    - It acts only while the ticker's own exchange is LIVE, and only on a quote
      that is itself LIVE and fresh (`quotes.tradable_price`).
+4. **Network → the Pi.**
+   - uvicorn binds `127.0.0.1` only. The one way in is `tailscale serve`
+     (HTTPS, your tailnet's devices only); nothing listens on the LAN.
+   - Sign-up is `approval`: reaching the page lets anyone on the tailnet create
+     an account, never see data. Only `STOCKS_ADMIN_EMAIL` is approved and admin
+     on creation.
+5. **The service user → the system.**
+   - The app runs as the unprivileged `stocks` user under `ProtectSystem=strict`,
+     writing only its data, logs and `.git`.
+   - Its polkit rule allows exactly two systemd actions: start
+     `stocks-update.service` and restart `stocks-dashboard.service`.
+6. **GitHub → the Pi (updates).**
+   - The admin-only updater fast-forwards to `origin/main` and installs the web
+     app CI built from that exact commit (`web-dist`, `source: <sha>`).
+   - CI publishes a build only after the arm64 test suite and the frontend
+     lint/build pass, so a red commit has no web app and the update rolls back.
 
 ## Threats and what stops them
 | Threat | Control | Test |
@@ -41,6 +57,8 @@ true before a live broker (STC-55) is connected.
 | Someone edits or deletes history | Hash chain per user; `audit.verify` names the first broken row; admins verify every chain from the Server page | `test_guardrails.py` |
 | Secrets leak into logs | `logging_config.RedactSecrets` on every handler: known secret values, `key=value` credentials, bot tokens and bearer headers, including tracebacks | `test_guardrails.py` |
 | Deleting an account strands data that a reissued id would inherit | `db.delete_user` sweeps every per-user table, including `orders` and `audit_log` | `test_delete_user.py` |
+| A stranger on the tailnet signs up first and becomes admin | Only `STOCKS_ADMIN_EMAIL` is created admin/approved, whatever the order; pending accounts get 403 outside `/api/auth/*`; approve/reject are admin-only and audited | `test_registration_gate.py` |
+| Someone pushes a broken or hostile commit to `main` and the Pi installs it | Updates are admin-initiated; no web app is published unless CI passes; any failed step rolls back. Protect `main` on GitHub | `test_pi_update.py` |
 
 ## Before a live broker is connected (STC-48, STC-49, STC-51, STC-55)
 - **Broker keys** go in the OS keyring under the service account, never in
@@ -57,5 +75,6 @@ true before a live broker (STC-55) is connected.
 ## Out of scope today
 - Multi-process deployments. The rate limiter, caches and scheduler are
   in-process by design (one uvicorn worker).
-- A compromised host. Anyone with the machine has the database and the
-  service environment.
+- A compromised host, or physical access to the Pi. The SD card (or SSD) and
+  the backup stick hold the database, TOTP secrets included, in plaintext,
+  and `/etc/stocks-dashboard/stocks.env` holds the API keys.

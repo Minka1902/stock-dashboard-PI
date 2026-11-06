@@ -4,10 +4,9 @@ A timestamped stderr handler plus a rotating file handler on the root logger;
 every module logs through ``logging.getLogger(__name__)``. Level comes from
 ``STOCKS_LOG_LEVEL``.
 
-The file handler is not a nicety. uvicorn is launched detached and minimized by
-``start.ps1``, so stderr goes to a console window nobody keeps — a crash there
-leaves no evidence at all. Everything worth reading after the fact has to land
-in ``STOCKS_LOG_DIR``.
+On the Pi, stderr goes to the journal (``journalctl -u stocks-dashboard``),
+which install.sh caps at 64 MB for the whole system; the rotating file in
+``STOCKS_LOG_DIR`` keeps the app's own history independent of that cap.
 """
 import logging
 import logging.handlers

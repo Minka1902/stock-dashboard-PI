@@ -89,8 +89,8 @@ class _LockingConnection(sqlite3.Connection):
 
 
 def connect(db_path: str) -> sqlite3.Connection:
-    # SQLite creates the file but not its directory. The Windows service points
-    # this at C:\ProgramData\SignalDashboard\db\, and this runs at import time
+    # SQLite creates the file but not its directory. The Pi service points
+    # this at /var/lib/stocks-dashboard/db/, and this runs at import time
     # (main.py connects before logging exists), so a missing directory would
     # surface only as "unable to open database file" in the service's stderr
     # log. ":memory:" and bare filenames have no parent worth creating.

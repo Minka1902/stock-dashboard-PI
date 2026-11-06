@@ -17,115 +17,65 @@ unavailable, the source records an error status (visible in the UI) rather than 
 
 ## Layout & commands
 
-Three independent apps, no root package manager. Run each from its own directory.
+Two apps plus the Pi deployment, no root package manager. Run each from its own directory.
 
-### Backend (`backend/`) — FastAPI + SQLite + APScheduler, Python 3.11+
+### Backend (`backend/`) — FastAPI + SQLite + APScheduler, Python 3.13 (3.11+)
 ```bash
 cd backend
-python -m venv .venv && .venv/Scripts/python.exe -m pip install -r requirements.txt  # first time (Windows)
-.venv/Scripts/python.exe -m uvicorn app.main:app --reload --port 8000   # run API + scheduler
-.venv/Scripts/python.exe -m pytest                                       # all tests
+python -m venv .venv && .venv/bin/pip install -r requirements.txt   # first time
+.venv/bin/python -m uvicorn app.main:app --reload --port 8000        # run API + scheduler
+.venv/bin/python -m pytest                                          # all tests
 ```
 Imports are package-relative (`from app import db`), so **always run from `backend/`** with the
 `app.main:app` module path. Tests use a `conn` fixture (`tests/conftest.py`) giving a fresh
 temp-file SQLite DB per test.
 
 ### Frontend (`frontend/`) — React 19 + Vite, plain CSS Modules
-Standard npm scripts (`install` / `dev` / `build` / `lint`) — see `package.json`.
+Standard npm scripts (`ci` / `dev` / `build` / `lint`) — see `package.json`. Use `npm ci`: CI does,
+so `package-lock.json` must stay in sync with `package.json`.
 
 **Two run modes:**
-- **Single port (prod-like):** `cd frontend && npm run build`, then run uvicorn — the backend
+- **Single port (what the Pi runs):** `cd frontend && npm run build`, then run uvicorn — the backend
   serves the built `frontend/dist/` on `:8000` (SPA catch-all in `app/main.py::_mount_spa`, only
-  active when a build exists). Open `http://localhost:8000`. Override the dist path with
-  `STOCKS_STATIC_DIR`.
+  active when a build exists). Override the dist path with `STOCKS_STATIC_DIR`.
 - **Dev (hot reload):** run both — Vite on `:5173` proxies `/api` → `:8000` (see
-  `vite.config.js`), so `src/api.js` uses a same-origin relative base (`VITE_API_BASE` defaults to
-  `""`; set it only for a cross-origin backend). The backend CORS allowlist defaults to
-  `http://localhost:5173` (override with `STOCKS_CORS_ORIGINS`; wildcard rejected because requests
-  carry the session cookie).
+  `vite.config.js`, `VITE_API_TARGET`), so `src/api.js` uses a same-origin relative base. The
+  backend CORS allowlist defaults to `http://localhost:5173` (override with `STOCKS_CORS_ORIGINS`;
+  wildcard rejected because requests carry the session cookie).
 
 **Run exactly one uvicorn worker.** The scheduler, TTL caches, rate limiter, the shared
 SQLite connection and the server-sent-events bus (`app/events.py`) are all in-process; scaling
 out means moving all five out of the process first.
 
-### Extension (`extension/`) — MV3 browser extension, Chrome + Firefox
-```bash
-cd extension
-npm install
-npm run build    # -> dist-chrome/ and dist-firefox/ (three Vite passes each)
-npm run test     # node --test, no browser needed
-npm run lint
-```
-A companion to the dashboard, not a second one: ticker badges on finance/social sites, a
-watchlist popup, and desktop notifications for high-severity alerts (the backend has no push
-channel). It reuses the existing REST API and session cookie — **no backend changes.** All
-network calls run in the background worker, because a content-script `fetch` would carry the
-visited page's origin and be blocked by CORS. See `extension/README.md` for the load-unpacked
-steps, the `STOCKS_CORS_ORIGINS` note, and the list of constants duplicated from `frontend/`
-that must be kept in sync (notably `convictionTier`/`CHIP_META` from `BoomScorePanel.jsx`).
-
-### Windows service (`windows/`) — NSSM, PowerShell only
-```powershell
-.\windows\install-service.ps1      # elevated; registers + starts SignalDashboard
-.\windows\service-control.ps1 -Status    # -Start -Stop -Restart -Logs
-.\windows\uninstall-service.ps1          # -PurgeData to drop the database too
-.\windows\install-desktop.ps1            # npm install + Start Menu shortcut (no elevation)
-```
-The production run mode. Hosts the backend as a boot-start LocalSystem service so the
-scheduler keeps ingesting before anyone logs in. **NSSM is the only supervisor** —
-the service invokes `run_server.py --no-supervise`, which runs uvicorn *in-process* so
-NSSM's Ctrl-C reaches it and the lifespan WAL checkpoint actually runs.
-
-Data moves machine-wide to `C:\ProgramData\SignalDashboard\` (`db\`, `logs\`); the code
-still runs from this working tree. Secrets come from `windows\service.env` — **nothing
-loads a `.env`**, so that file is the only way they reach a LocalSystem service.
-The service DB is separate from `backend\stocks.db` used by `start.ps1` (separate
-accounts, separate TOTP). See `windows/README.md`, especially the note that
-`STOCKS_CORS_ORIGINS[0]` doubles as the OAuth post-login redirect target
-(`routes_oauth.py::_frontend_origin`) and must stay the app's own origin.
-
-**In-app update** (Info → Updates): `app/updater.py` compares the checkout against
-`origin/main` using git, with a 6-hourly scheduler job and a 1h cache. `app/routes_update.py`
-serves `GET /api/update/status` to any user. `POST /api/update/apply` is admin-only and refuses
-with 409 unless the checkout is on `main`, has no tracked changes, and can fast-forward. It
-spawns a detached `windows/update.ps1` (pull → pip → npm build → restart, rolling back on
-failure), which writes progress to `<LOG_DIR>/update-status.json`. `/api/health` carries
-`commit`, which is how the UI knows the restarted server is on the new code.
-`backend/app/version.py` is the version source of truth, and `frontend/package.json` mirrors
-it. See `windows/README.md` → "Updating from the app".
-
-**Installer** (`windows/setup/`): `SignalSetup.exe` is an Inno Setup *bootstrapper* built by
-`.github/workflows/installer.yml`. It installs git/Node/Python machine-wide, clones `main` into
-Program Files, and runs `install-service.ps1` + `install-desktop.ps1`. It stays a git checkout
-on purpose, so the updater above keeps working. The desktop app runs that updater's check on
-every launch (`desktop/src/updates/`).
-
-### Desktop app (`desktop/`) — Electron shell
-```bash
-cd desktop
-npm install
-npm start        # electron .
-npm run test     # node --test, no Electron needed
-npm run lint
-```
-A window plus a tray icon (unread count, native toasts) over the running service — it
-never starts the backend itself. The window loads **`http://127.0.0.1:8000`, the backend's
-own origin, never `file://`**: routing is History-API paths, Vite emits absolute asset
-URLs, and auth is a same-origin httpOnly cookie, so same-origin is what makes all three
-work with zero frontend changes. `127.0.0.1` not `localhost` — uvicorn binds IPv4 only
-and they are separate cookie jars. See `desktop/README.md`.
-
-### Constants duplicated across apps (keep in sync)
-No root package manager, so the companions copy rather than share:
-
-| Copy | Source |
-|---|---|
-| `extension/…` `convictionTier`/`CHIP_META` | `frontend/src/components/BoomScorePanel.jsx` |
-| `desktop/src/alerts/seen.js`, `desktop/tests/seen.test.js` | `extension/src/background/seen.js` (verbatim) |
-| `"app:navigate"` in `desktop/src/preload.cjs` | `NAV_EVENT` in `frontend/src/lib/nav.js` |
-| `desktop/src/tray.js` menu items | `commandItems` in `frontend/src/App.jsx` |
-| poll cadence, `MAX_NOTIFICATIONS_PER_POLL` | `extension/src/background/index.js` |
-| `STALE_RUN_MS`, `isApplyRunning` in `desktop/src/…` | `STALE_RUN_SECONDS`, `is_apply_running` in `backend/app/updater.py` |
+### Raspberry Pi (`pi/`) — systemd, bash, Python stdlib
+The only production run mode: a headless Raspberry Pi (OS Lite 64-bit, Trixie / Python 3.13).
+`pi/README.md` is the operator's guide; `shellcheck -x -P pi pi/*.sh` must pass.
+- **`install.sh`** (idempotent, root): apt deps, system user `stocks`, clone to
+  `/opt/stocks-dashboard`, venv, `/etc/stocks-dashboard/stocks.env` (the user's, from
+  `pi/stocks.env.example`, never overwritten) and `install.env` (derived paths + the tailnet
+  origin, rewritten every run and loaded last so it wins), `tailscale serve`, watchdog, zram,
+  journal cap, `systemd-time-wait-sync`, units, polkit rule, then the web app via
+  `update.py fetch-dist`. Paths live in `pi/common.sh` **and** are hard-coded in the unit files
+  (systemd doesn't expand variables in paths) — change both together.
+- **`stocks-dashboard.service`** runs `run_server.py --no-supervise` (in-process uvicorn, so
+  systemd's stop reaches the app and the lifespan WAL checkpoint runs). `Restart=always`, no start
+  limit, after `network-online` + `time-sync` (the Pi 3 has no RTC: TOTP and schedules need a synced
+  clock), `ProtectSystem=strict` with write access to the data, logs and `.git` only.
+- **`stocks-healthcheck.timer`** → `healthcheck.sh`: restart after 3 non-`ok` `/api/health` answers in
+  a row (hung process, `checks.refresh_thread` false), never while an update is running.
+- **In-app update** (Info → Updates): `app/updater.py` compares the checkout with `origin/main`
+  (6-hourly job, 1h cache). `POST /api/update/apply` (admin, 409 unless on `main`, clean and
+  fast-forwardable) writes `<LOG_DIR>/update-request.json` and starts `stocks-update.service`
+  (`systemctl start --no-block`, allowed by `pi/50-stocks-dashboard.rules`). That unit runs
+  `pi/update.py`: pull → pip → **download** the web app → restart → wait for `/api/health`'s
+  `commit`, rolling back on any failure, writing `<LOG_DIR>/update-status.json` (the schema
+  `updater.initial_status`/`STEPS` and `UpdatesSection.jsx` read). `detect_mode` is structural:
+  `INVOCATION_ID` + the `stocks-dashboard.service` cgroup. `backend/app/version.py` is the version
+  source of truth; `frontend/package.json` mirrors it.
+- **Web app from CI** (`.github/workflows/pi.yml`): backend tests on `ubuntu-24.04-arm` (the Pi's
+  arch), frontend lint/build, and on `main` only when both pass, the build is committed to the
+  orphan `web-dist` branch as `source: <main sha>`. `update.py` finds the commit for its target
+  and `git archive`s it into `frontend/dist` (keeping `dist.prev`). The Pi never runs npm.
 
 ## Auth & multi-tenancy
 
@@ -154,11 +104,19 @@ No root package manager, so the companions copy rather than share:
 - Rate limiting (`app/security.py`) is a fixed-window in-memory limiter; ticker inputs are
   whitelisted by `app/validation.py::clean_ticker` before reaching outbound URLs.
 - **`app/registration.py` is the only gate on account creation** (`STOCKS_REGISTRATION` =
-  `open` | `invite` | `closed`, default `open`). There are exactly two account factories —
-  `routes_auth.register` and the auto-create inside `routes_oauth._resolve_user` — and both
-  must call it. A third creation path that forgets to is the regression to watch for.
-  Deliberately no first-user bootstrap exemption: it would be a race between the operator and
-  the first stranger to load the URL, and the winner gets `is_admin` plus `claim_legacy_rows`.
+  `open` | `invite` | `approval` | `closed`, default `open`; the Pi template sets `approval`).
+  There are exactly two sign-up paths — `routes_auth.register` and the auto-create inside
+  `routes_oauth._resolve_user` — and both gate with `may_register` and create with
+  `registration.create_account`, the one account factory. A third creation path that skips
+  either is the regression to watch for. Deliberately no first-user bootstrap exemption.
+- **Approval queue** (`approval`): anyone may sign up and enroll TOTP, but only
+  `STOCKS_ADMIN_EMAIL` (required in this mode; boot refuses without it) is created approved, admin
+  and claims legacy rows — whatever the order, which is what closes the first-user race. Everyone
+  else has `users.approved_at` NULL: the middleware answers 403 `account pending approval` outside
+  `/api/auth/*` (so `/api/auth/me` can return `approved: false` and the frontend shows
+  `PendingApproval`), and every admin gets a `signup` alert (pushed to their channels). Admins
+  approve/reject at `/api/server/signups` (audited; reject = `db.delete_user`). Existing accounts
+  were backfilled as approved by `_migrate_users_approved`.
 - `db.delete_user` sweeps every per-user table explicitly (incl. `drawings`, `drawing_drafts`, `fx_watch`, the ledger and the bots). Only `sessions`,
   `recovery_codes` and `oauth_identities` declare `ON DELETE CASCADE`, so deleting the `users`
   row alone strands the rest under an id SQLite may reissue. Keep `_PER_USER_TABLES` in step
@@ -166,12 +124,14 @@ No root package manager, so the companions copy rather than share:
 
 ## Public exposure
 
-The app can be served on the internet through a tunnel (Tailscale Funnel — see
-`windows/README.md`). Three things that are load-bearing:
+On the Pi the app is reached through `tailscale serve` (HTTPS on the tailnet, set up by
+`pi/install.sh`). Three things that are load-bearing:
 
-- **The bind never changes.** The tunnel dials `127.0.0.1` from this machine; `0.0.0.0` would
-  only add LAN exposure. `install-service.ps1 -PublicOrigin` derives every env var that has to
-  agree with the public URL, including the `CORS_ORIGINS[0]` ordering rule above.
+- **The bind never changes.** Tailscale dials `127.0.0.1` on the Pi; `0.0.0.0` would only add LAN
+  exposure. `install.sh` derives every env var that has to agree with the public URL into
+  `install.env` (`STOCKS_CORS_ORIGINS`, `STOCKS_OAUTH_REDIRECT_BASE`, secure cookies, HSTS,
+  trusted proxies). `STOCKS_CORS_ORIGINS[0]` doubles as the OAuth post-login redirect target
+  (`routes_oauth.py::_frontend_origin`) and must stay the app's own origin.
 - **`security.py::_client_ip` trusts `X-Forwarded-For` only from `config.TRUSTED_PROXY_IPS`.**
   Behind a tunnel every socket peer is loopback, so keying rate limits on the peer alone puts
   the whole internet in one bucket; trusting the header unconditionally lets anyone forge a
@@ -220,7 +180,10 @@ the Server page) is what runs.
 - **`app/models.py`** — Pydantic models that are the common schema between sources, DB, and API.
 - **`app/main.py`** — FastAPI routes (mostly thin `db.get_* -> model_dump()` reads) plus the
   scheduler wiring in `lifespan`: **one APScheduler job per source** (`src:<name>`) plus `src:derived`,
-  `daily_analysis`, `daily_digest` and `prune_history`, all on the single-thread `refresh` executor.
+  `daily_analysis`, `daily_digest`, `prune_history`, `db_backup` and the minute jobs (`bots`,
+  `exits`, `telegram`), all on the single-thread `refresh` executor. `netwatch` and `update_check`
+  run on the default executor: neither writes `refresh_conn` through ingestion, and a fetch hung on
+  a dead network must not delay noticing the outage.
 
 **Scheduling rules (task 9: nothing is silently skipped):**
 - Every job runs on one serial thread (`_refresh_executor`, shared with manual `/api/refresh` and
@@ -236,6 +199,21 @@ the Server page) is what runs.
   re-arm itself — draining inside it deadlocks.
 - A non-forced manual refresh of a source with a registry `min_interval` that is still fresh
   answers `queued: false` with the reason and next run (no run row); `force=1` is admin-only.
+- **Network outages** (`app/netwatch.py`): a 30 s plain-TCP probe (`STOCKS_NETCHECK_HOSTS`, no
+  DNS). While offline, `_run_source_now` swaps in a fetch that raises
+  `SourceDeferred("network offline")` — one `deferred` run per source per outage, never an error
+  storm and never a silent skip — and `_when_online` makes the minute jobs wait. The derived step
+  still runs (DB only). When the probe succeeds again, `main._netwatch` re-arms every source whose
+  status is `deferred: network offline` to run now (staggered, registry order). Each flip is one
+  `job_runs` row.
+- **Health**: `/api/health` reports `checks.refresh_thread` false once a fetch has run, or work has
+  waited, longer than `STOCKS_HEALTH_STUCK_SECONDS`; `pi/healthcheck.sh` restarts on repeated
+  non-ok answers.
+- **Data safety**: `db.connect` sets `synchronous=NORMAL` (crash-safe in WAL, far fewer fsyncs on
+  an SD card). `db_backup` (`app/backup.py`) copies the DB with the online backup API, keeps the copy
+  only if `integrity_check` passes, and keeps `STOCKS_BACKUP_KEEP`. `app/pihealth.py` feeds the
+  Server page's Raspberry Pi card (firmware throttling flags, temperature, memory, disk, last
+  backup) and reports `null`, never a guess, for anything it can't read.
 
 **Derived step:** `boom_score` (a pure DB computation that reads every other source), `alerts`
 (diffs the fresh boom scores against the prior `alert_state` snapshot to fire transition events
@@ -356,12 +334,13 @@ Notification channels safely no-op and log when their env vars are unset, so the
 without any of them.
 
 **Nothing loads a `.env` file.** `config.py` reads `os.environ` once at import; there is no
-`python-dotenv` and no `load_dotenv` anywhere. `backend/.env.example` is documentation — you
-must export the variables in your shell, or (for the Windows service, which inherits nothing
-from the installing user) put them in `windows/service.env`, which the installer bakes into the
-service's environment block.
+`python-dotenv` and no `load_dotenv` anywhere. On the Pi, systemd passes
+`/etc/stocks-dashboard/stocks.env` and then `install.env` (`EnvironmentFile=`); in development,
+export variables in your shell. `pi/stocks.env.example` is the one annotated template — add a
+new user-facing `STOCKS_*` variable there too.
 
 Path defaults are `__file__`-relative, not cwd-relative — `DB_PATH` → `backend/stocks.db`,
-`LOG_DIR` → `backend/logs/`, the SPA dist → `frontend/dist/`. That matters because a Windows
-service starts in `C:\Windows\system32`, where a relative DB path would silently create a
-second, empty database and the app would come up looking healthy with no data.
+`LOG_DIR` → `backend/logs/`, the SPA dist → `frontend/dist/`, `BACKUP_DIR` → next to the DB. A
+cwd-relative DB path would silently create a second, empty database wherever a service happens to
+start, and the app would come up looking healthy with no data (`tests/test_service_paths.py`). The
+Pi's `install.env` points them at `/var/lib/stocks-dashboard` and `/var/log/stocks-dashboard`.

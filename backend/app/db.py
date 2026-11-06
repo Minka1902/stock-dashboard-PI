@@ -133,6 +133,16 @@ def _migrate_users_onboarded(conn: sqlite3.Connection) -> None:
         conn.execute("UPDATE users SET onboarded = 1")
 
 
+def _migrate_users_approved(conn: sqlite3.Connection) -> None:
+    """Add users.approved_at once, backfilling every pre-existing account as
+    approved at its creation time: the approval queue applies to new sign-ups,
+    never to the people already using the instance. NULL = pending."""
+    cols = {r[1] for r in conn.execute("PRAGMA table_info(users)").fetchall()}
+    if "approved_at" not in cols:
+        conn.execute("ALTER TABLE users ADD COLUMN approved_at TEXT")
+        conn.execute("UPDATE users SET approved_at = created_at")
+
+
 def _migrate_watchlists(conn: sqlite3.Connection) -> None:
     """Move the flat per-user watchlist to named lists (Task 13). Runs once:
     if the watchlist table predates `watchlist_id`, rebuild it and fold each
@@ -1015,6 +1025,7 @@ def init_schema(conn: sqlite3.Connection) -> None:
     _try_add_column(conn, "notify_profile", "risk_pct", "REAL NOT NULL DEFAULT 1.0")
     _migrate_per_user_tables(conn)
     _migrate_users_onboarded(conn)
+    _migrate_users_approved(conn)
     _migrate_watchlists(conn)
     _try_add_column(conn, "news", "ticker", "TEXT NOT NULL DEFAULT ''")
 
@@ -4469,13 +4480,27 @@ def upsert_alert_state(
 
 # ---------- users, sessions & recovery codes ----------
 def create_user(conn: sqlite3.Connection, email: str, password_hash: str,
-                created_at: str, is_admin: bool = False) -> User:
+                created_at: str, is_admin: bool = False, approved: bool = True) -> User:
     cur = conn.execute(
-        "INSERT INTO users (email, password_hash, created_at, is_admin) VALUES (?, ?, ?, ?)",
-        (email, password_hash, created_at, int(is_admin)),
+        "INSERT INTO users (email, password_hash, created_at, is_admin, approved_at) "
+        "VALUES (?, ?, ?, ?, ?)",
+        (email, password_hash, created_at, int(is_admin), created_at if approved else None),
     )
     conn.commit()
     return get_user(conn, cur.lastrowid)
+
+
+def get_pending_users(conn: sqlite3.Connection) -> list[User]:
+    cur = conn.execute("SELECT * FROM users WHERE approved_at IS NULL ORDER BY id ASC")
+    return [User(**dict(row)) for row in cur.fetchall()]
+
+
+def approve_user(conn: sqlite3.Connection, user_id: int, at: str) -> bool:
+    """Approve a pending account. False when it is unknown or already approved."""
+    cur = conn.execute(
+        "UPDATE users SET approved_at = ? WHERE id = ? AND approved_at IS NULL", (at, user_id))
+    conn.commit()
+    return cur.rowcount == 1
 
 
 def get_user(conn: sqlite3.Connection, user_id: int) -> User | None:

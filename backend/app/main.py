@@ -956,6 +956,10 @@ async def _authenticate(request, call_next):
     )
     if protected and request.state.user is None:
         return JSONResponse(status_code=401, content={"detail": "not authenticated"})
+    # An account in the approval queue keeps /api/auth/* (so /api/auth/me can
+    # say "pending" and logout works) and nothing else.
+    if protected and request.state.user.approved_at is None:
+        return JSONResponse(status_code=403, content={"detail": "account pending approval"})
     return await call_next(request)
 
 
@@ -2257,6 +2261,37 @@ def _iso(dt: datetime | None) -> str | None:
 def _job_next_run(job_id: str) -> str | None:
     job = scheduler.get_job(job_id)
     return _iso(getattr(job, "next_run_time", None)) if job else None
+
+
+def _signup_row(u) -> dict:
+    return {"id": u.id, "email": u.email, "created_at": u.created_at,
+            "totp_enabled": u.totp_enabled}
+
+
+@app.get("/api/server/signups")
+def server_signups(user=Depends(_require_admin)):
+    """Accounts waiting in the approval queue, oldest first."""
+    return [_signup_row(u) for u in db.get_pending_users(conn)]
+
+
+@app.post("/api/server/signups/{user_id}/approve")
+def approve_signup(user_id: int, user=Depends(_require_admin)):
+    pending = db.get_user(conn, user_id)
+    if pending is None or not db.approve_user(conn, user_id, _now_iso()):
+        raise HTTPException(status_code=404, detail="no pending sign-up with that id")
+    audit.record(conn, user.id, "signup_approved", account_id=user_id, email=pending.email)
+    return _signup_row(pending)
+
+
+@app.post("/api/server/signups/{user_id}/reject")
+def reject_signup(user_id: int, user=Depends(_require_admin)):
+    """Delete a pending account and everything it owns (it owns nothing yet)."""
+    pending = db.get_user(conn, user_id)
+    if pending is None or pending.approved_at is not None:
+        raise HTTPException(status_code=404, detail="no pending sign-up with that id")
+    db.delete_user(conn, user_id)
+    audit.record(conn, user.id, "signup_rejected", account_id=user_id, email=pending.email)
+    return {"deleted": user_id}
 
 
 @app.get("/api/server/overview")

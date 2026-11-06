@@ -672,6 +672,7 @@ class User(BaseModel):
     is_admin: bool = False
     created_at: str = ""
     onboarded: bool = False  # has this account seen the guided app tour?
+    approved_at: str | None = None  # None = waiting in the approval queue
 
     def public(self) -> dict:
         """The shape safe to return to the browser."""
@@ -681,6 +682,7 @@ class User(BaseModel):
             "is_admin": self.is_admin,
             "created_at": self.created_at,
             "onboarded": self.onboarded,
+            "approved": self.approved_at is not None,
         }
 
 

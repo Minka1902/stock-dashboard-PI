@@ -106,12 +106,13 @@ TRUSTED_PROXY_IPS = frozenset(
 HSTS_SECONDS = int(os.environ.get("STOCKS_HSTS_SECONDS", "0"))
 
 # Who may create an account: "open" (anyone), "invite" (must present
-# STOCKS_INVITE_CODE), "closed" (nobody). Being reachable and being open for
-# signup are separate decisions — see app/registration.py.
+# STOCKS_INVITE_CODE), "approval" (anyone may sign up, but the account sees
+# nothing until the admin approves it), "closed" (nobody). Being reachable and
+# being open for signup are separate decisions — see app/registration.py.
 REGISTRATION_MODE = os.environ.get("STOCKS_REGISTRATION", "open").strip().lower()
-if REGISTRATION_MODE not in ("open", "invite", "closed"):
+if REGISTRATION_MODE not in ("open", "invite", "approval", "closed"):
     raise ValueError(
-        "STOCKS_REGISTRATION must be one of: open, invite, closed "
+        "STOCKS_REGISTRATION must be one of: open, invite, approval, closed "
         f"(got {REGISTRATION_MODE!r})"
     )
 INVITE_CODE = os.environ.get("STOCKS_INVITE_CODE", "")
@@ -120,6 +121,15 @@ if REGISTRATION_MODE == "invite" and not INVITE_CODE:
         "STOCKS_REGISTRATION=invite requires STOCKS_INVITE_CODE. An empty code "
         "would compare equal to an empty submission and open registration to "
         "anyone with the URL."
+    )
+# The one account that is created approved and admin in "approval" mode. Naming
+# it up front is what closes the first-user race: whoever registers first is
+# just another pending account unless they are this email.
+ADMIN_EMAIL = os.environ.get("STOCKS_ADMIN_EMAIL", "").strip().lower()
+if REGISTRATION_MODE == "approval" and not ADMIN_EMAIL:
+    raise ValueError(
+        "STOCKS_REGISTRATION=approval requires STOCKS_ADMIN_EMAIL: without it "
+        "no account could ever be approved."
     )
 
 # Lifetime of a fully-authenticated session. Default 14 days.

@@ -132,7 +132,7 @@ def _resolve_user(conn, provider: str, provider_user_id: str, email: str):
     """Existing identity → user; else link by verified email; else create.
 
     A created account gets a random unusable password hash (it signs in via
-    OAuth only); the first-ever account still becomes admin.
+    OAuth only); registration.create_account decides admin and approval.
     """
     ident = db.get_oauth_identity(conn, provider, provider_user_id)
     if ident is not None:
@@ -150,11 +150,8 @@ def _resolve_user(conn, provider: str, provider_user_id: str, email: str):
             # is nowhere to type an invite code in an OAuth round trip, so
             # invite/closed both reduce OAuth to link-only.
             raise registration.RegistrationClosed()
-        first = db.count_users(conn) == 0
-        unusable = auth.hash_password(secrets.token_urlsafe(32))
-        user = db.create_user(conn, email, unusable, _now_iso(), is_admin=first)
-        if first:
-            db.claim_legacy_rows(conn, user.id)
+        user = registration.create_account(
+            conn, email, auth.hash_password(secrets.token_urlsafe(32)))
 
     db.create_oauth_identity(conn, OAuthIdentity(
         provider=provider, provider_user_id=provider_user_id,

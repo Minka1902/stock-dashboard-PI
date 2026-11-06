@@ -74,13 +74,9 @@ def build_router(conn) -> APIRouter:
             raise HTTPException(status_code=400, detail="password must be 8-128 characters")
         if db.get_user_by_email(conn, email) is not None:
             raise HTTPException(status_code=409, detail="email already registered")
-        first_user = db.count_users(conn) == 0
-        user = db.create_user(
-            conn, email, auth.hash_password(body.password), _now_iso(), is_admin=first_user,
-        )
-        if first_user:
-            db.claim_legacy_rows(conn, user.id)
-            logger.info("first user registered (admin): %s", email)
+        user = registration.create_account(conn, email, auth.hash_password(body.password))
+        logger.info("account registered: %s (admin=%s, approved=%s)",
+                    email, user.is_admin, user.approved_at is not None)
         token = auth.start_session(conn, user.id, auth.STATE_SETUP)
         auth.set_session_cookie(response, token, max_age=None)
         return {"status": "totp_setup_required"}

@@ -185,7 +185,7 @@ def test_health_is_public_and_reports_checks(app_module):
     assert resp.status_code == 200
     body = resp.json()
     assert body["status"] == "ok"
-    assert body["checks"] == {"db": True, "scheduler": True}
+    assert body["checks"] == {"db": True, "scheduler": True, "refresh_thread": True}
     assert body["uptime_seconds"] >= 0
 
 

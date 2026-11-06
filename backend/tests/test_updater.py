@@ -205,19 +205,48 @@ def test_is_apply_running_ignores_stale(tmp_path, monkeypatch):
     assert updater.read_apply_status()["state"] == "unknown"
 
 
-def test_build_command_passes_mode_and_status_dir(tmp_path, monkeypatch):
+def test_spawn_writes_request_and_starts_the_update_unit(tmp_path, monkeypatch):
     monkeypatch.setattr(updater.config, "LOG_DIR", tmp_path)
-    cmd = updater.build_command("aaaaaaa", "service", 8000)
-    assert cmd[0] == "powershell.exe"
-    assert cmd[cmd.index("-Mode") + 1] == "service"
-    assert cmd[cmd.index("-StatusDir") + 1] == str(tmp_path)
-    assert cmd[cmd.index("-PreviousCommit") + 1] == "aaaaaaa"
+    calls = []
+    monkeypatch.setattr(subprocess, "run", lambda cmd, **k: calls.append(cmd) or
+                        subprocess.CompletedProcess(cmd, 0, "", ""))
+    updater.spawn_update("aaaaaaa", "service", 8000)
+    assert calls == [["systemctl", "start", "--no-block", "stocks-update.service"]]
+    request = json.loads(updater.request_path().read_text(encoding="utf-8"))
+    assert request == {"previous_commit": "aaaaaaa", "port": 8000}
+
+
+def test_spawn_reports_a_systemctl_refusal(tmp_path, monkeypatch):
+    monkeypatch.setattr(updater.config, "LOG_DIR", tmp_path)
+    monkeypatch.setattr(subprocess, "run", lambda cmd, **k: subprocess.CompletedProcess(
+        cmd, 4, "", "Failed to start stocks-update.service: Access denied"))
+    with pytest.raises(RuntimeError, match="Access denied"):
+        updater.spawn_update("aaaaaaa", "service", 8000)
+
+
+def test_spawn_refuses_outside_the_service(tmp_path, monkeypatch):
+    monkeypatch.setattr(updater.config, "LOG_DIR", tmp_path)
+    with pytest.raises(RuntimeError, match="only under stocks-dashboard.service"):
+        updater.spawn_update("aaaaaaa", "dev", 8000)
+    assert not updater.request_path().exists()
 
 
 def test_detect_mode_override(monkeypatch):
     monkeypatch.setenv("STOCKS_UPDATE_MODE", "service")
     assert updater.detect_mode() == "service"
     monkeypatch.setenv("STOCKS_UPDATE_MODE", "dev")
+    assert updater.detect_mode() == "dev"
+
+
+def test_detect_mode_reads_the_systemd_unit(monkeypatch):
+    monkeypatch.delenv("STOCKS_UPDATE_MODE", raising=False)
+    monkeypatch.setenv("INVOCATION_ID", "0123abcd")
+    monkeypatch.setattr(updater, "_cgroup", lambda: "0::/system.slice/stocks-dashboard.service\n")
+    assert updater.detect_mode() == "service"
+    monkeypatch.setattr(updater, "_cgroup", lambda: "0::/user.slice/user-1000.slice/session-2.scope\n")
+    assert updater.detect_mode() == "dev"
+    monkeypatch.delenv("INVOCATION_ID")
+    monkeypatch.setattr(updater, "_cgroup", lambda: "0::/system.slice/stocks-dashboard.service\n")
     assert updater.detect_mode() == "dev"
 
 

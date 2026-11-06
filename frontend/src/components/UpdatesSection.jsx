@@ -21,7 +21,7 @@ const RECONNECT_GIVE_UP_MS = 4 * 60 * 1000;
 const DEFAULT_STEPS = [
   { id: "pull", label: "Pull from GitHub", state: "pending", detail: "" },
   { id: "deps", label: "Install Python packages", state: "pending", detail: "" },
-  { id: "frontend", label: "Rebuild the web app", state: "pending", detail: "" },
+  { id: "frontend", label: "Download the web app", state: "pending", detail: "" },
   { id: "restart", label: "Restart", state: "pending", detail: "" },
 ];
 
@@ -237,8 +237,8 @@ export default function UpdatesSection() {
           {confirming ? (
             <div className={styles.confirm} role="alertdialog" aria-label="Confirm update">
               <span className={styles.confirmText}>
-                Pull {check.behind} commit{check.behind === 1 ? "" : "s"}, reinstall packages, rebuild
-                the web app and restart the server? The dashboard is unavailable for a minute or
+                Pull {check.behind} commit{check.behind === 1 ? "" : "s"}, reinstall packages, download
+                the new web app and restart the server? The dashboard is unavailable for a minute or
                 two. If any step fails it rolls back to <code className={styles.sha}>{check.current_commit}</code>.
               </span>
               <button type="button" className={styles.secondary} onClick={() => setConfirming(false)}>
@@ -342,7 +342,7 @@ function Progress({ steps, apply, phase, countdown, target, runningCommit }) {
   } else if (phase === "timeout") {
     banner = {
       tone: "bad",
-      text: "The server has not come back after 4 minutes. Check the service (windows\\service-control.ps1 -Status) and update.log.",
+      text: "The server has not come back after 4 minutes. On the Pi run `systemctl status stocks-dashboard` and `journalctl -u stocks-update`.",
     };
   } else if (state === "done") {
     // Offer a reload only while this page is older than the update.

@@ -1,7 +1,7 @@
 """In-app update routes: /api/update/status (any user) and /api/update/apply (admin).
 
 Kept out of main.py so the update feature is one self-contained unit: the git
-logic is in app/updater.py, the work itself in windows/update.ps1.
+logic is in app/updater.py, the work itself in pi/update.sh.
 """
 import logging
 import threading

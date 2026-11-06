@@ -1,7 +1,7 @@
 """In-app update: compare this working tree against GitHub, and hand off an update.
 
-The app runs straight from a git checkout (the Windows service included — see
-windows/README.md), so "is there a newer version?" is a git question:
+The Pi runs straight from a git checkout (/opt/stocks-dashboard), so "is there
+a newer version?" is a git question:
 
     git fetch origin main
     git rev-list --count HEAD..origin/main     -> how far behind
@@ -12,13 +12,15 @@ Nothing here ever invents a status. If git is missing, or GitHub can't be
 reached, the check says exactly that and reports no update.
 
 Applying is deliberately NOT done in this process: the update restarts the very
-server that would be running it. `spawn_update` hands off to a detached
-windows/update.ps1 which pulls, installs, rebuilds, restarts, and rolls back on
-failure, writing its progress to `<LOG_DIR>/update-status.json` for the UI.
+server that would be running it. `spawn_update` writes the request to
+`<LOG_DIR>/update-request.json` and starts the separate stocks-update.service
+unit (pi/update.sh), which pulls, installs, fetches the prebuilt web app,
+restarts and rolls back on failure, writing its progress to
+`<LOG_DIR>/update-status.json` for the UI. Being its own unit, it survives the
+restart of this one.
 
-Every git call passes `-c safe.directory=<repo>`: the service runs as
-LocalSystem, and git refuses ("dubious ownership") to touch a tree owned by the
-user who cloned it.
+Every git call passes `-c safe.directory=<repo>`: git refuses ("dubious
+ownership") to touch a tree owned by another user than the one running it.
 """
 from __future__ import annotations
 
@@ -27,7 +29,6 @@ import logging
 import os
 import re
 import subprocess
-import sys
 import threading
 import time
 from datetime import datetime, timedelta, timezone
@@ -44,10 +45,12 @@ logger = logging.getLogger(__name__)
 REPO_ROOT = Path(__file__).resolve().parents[2]
 REMOTE = "origin"
 BRANCH = "main"
-SERVICE_NAME = "SignalDashboard"
+SERVICE_UNIT = "stocks-dashboard.service"
+UPDATE_UNIT = "stocks-update.service"
 
 FETCH_TIMEOUT_SECONDS = 30
 GIT_TIMEOUT_SECONDS = 10
+SYSTEMCTL_TIMEOUT_SECONDS = 10
 CACHE_TTL_SECONDS = 3600
 CHECK_INTERVAL_HOURS = 6
 MAX_COMMITS = 50
@@ -57,7 +60,7 @@ MAX_DIRTY_FILES = 20
 STALE_RUN_SECONDS = 30 * 60
 
 STATUS_FILE_NAME = "update-status.json"
-UPDATE_SCRIPT = REPO_ROOT / "windows" / "update.ps1"
+REQUEST_FILE_NAME = "update-request.json"
 
 _FIELD_SEP = "\x1f"
 _VERSION_RE = re.compile(r"""^__version__\s*=\s*["']([^"']+)["']""", re.MULTILINE)
@@ -176,22 +179,15 @@ def friendly_fetch_error(stderr: str) -> str:
 
 # ---------- git plumbing ----------
 
-def _creationflags() -> int:
-    # No console window flashing up under the service or the desktop shell.
-    return getattr(subprocess, "CREATE_NO_WINDOW", 0) if sys.platform == "win32" else 0
-
-
 def _git(*args: str, timeout: int = GIT_TIMEOUT_SECONDS) -> str:
     cmd = ["git", "-c", f"safe.directory={REPO_ROOT.as_posix()}", *args]
     env = dict(os.environ)
     # Never block a request thread on a credential prompt.
     env["GIT_TERMINAL_PROMPT"] = "0"
-    env["GCM_INTERACTIVE"] = "never"
     try:
         proc = subprocess.run(
             cmd, cwd=str(REPO_ROOT), capture_output=True, text=True,
             encoding="utf-8", errors="replace", timeout=timeout, env=env,
-            creationflags=_creationflags(),
         )
     except FileNotFoundError as exc:
         raise GitError("git is not installed or not on the server's PATH") from exc
@@ -330,10 +326,14 @@ def schedule(scheduler) -> None:
     )
 
 
-# ---------- apply progress (written by windows/update.ps1) ----------
+# ---------- apply progress (written by pi/update.sh) ----------
 
 def status_path() -> Path:
     return Path(config.LOG_DIR) / STATUS_FILE_NAME
+
+
+def request_path() -> Path:
+    return Path(config.LOG_DIR) / REQUEST_FILE_NAME
 
 
 def read_apply_status() -> dict | None:
@@ -341,8 +341,7 @@ def read_apply_status() -> dict | None:
     if not path.exists():
         return None
     try:
-        # utf-8-sig: tolerate a BOM should PowerShell ever write one.
-        return json.loads(path.read_text(encoding="utf-8-sig"))
+        return json.loads(path.read_text(encoding="utf-8"))
     except (OSError, ValueError) as exc:
         return {"state": "unknown", "message": f"status file unreadable: {exc}"}
 
@@ -368,7 +367,7 @@ def is_apply_running(status: dict | None = None) -> bool:
 STEPS = [
     ("pull", "Pull from GitHub"),
     ("deps", "Install Python packages"),
-    ("frontend", "Rebuild the web app"),
+    ("frontend", "Download the web app"),
     ("restart", "Restart"),
 ]
 
@@ -390,91 +389,60 @@ def initial_status(previous: str, target: str | None, mode: str) -> dict:
     }
 
 
-def write_status(status: dict) -> None:
-    path = status_path()
+def _write_json(path: Path, payload: dict) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     tmp = path.with_suffix(".json.tmp")
-    tmp.write_text(json.dumps(status, indent=2), encoding="utf-8")
+    tmp.write_text(json.dumps(payload, indent=2), encoding="utf-8")
     os.replace(tmp, path)
+
+
+def write_status(status: dict) -> None:
+    _write_json(status_path(), status)
 
 
 # ---------- run mode + hand-off ----------
 
-def _service_pid() -> int | None:
-    if sys.platform != "win32":
-        return None
+def _cgroup() -> str:
     try:
-        out = subprocess.run(
-            ["sc", "queryex", SERVICE_NAME], capture_output=True, text=True,
-            timeout=5, creationflags=_creationflags()).stdout
-    except (OSError, subprocess.SubprocessError):
-        return None
-    match = re.search(r"PID\s*:\s*(\d+)", out)
-    pid = int(match.group(1)) if match else 0
-    return pid or None  # 0 = service stopped
-
-
-def _ancestor_pids() -> list[int]:
-    pids = [os.getppid()]
-    try:
-        import psutil
-        pids += [p.pid for p in psutil.Process().parents()]
-    except Exception:  # noqa: BLE001 - psutil is optional; the parent pid alone suffices
-        pass
-    return pids
+        return Path("/proc/self/cgroup").read_text(encoding="utf-8")
+    except OSError:
+        return ""
 
 
 def detect_mode() -> str:
-    """'service' when this process is hosted by the SignalDashboard NSSM
-    service, else 'dev'.
+    """'service' when this process runs inside the stocks-dashboard systemd
+    unit, else 'dev'.
 
-    The signal is structural, not a flag someone has to remember to set: NSSM
-    is the service's process and runs python as its direct child, so the
-    service's PID is one of our ancestors exactly when we are the service.
-    STOCKS_UPDATE_MODE=service|dev overrides it.
+    Structural, not a flag someone has to remember to set: systemd exports
+    INVOCATION_ID to every unit it starts and puts the unit's processes in a
+    cgroup named after it. STOCKS_UPDATE_MODE=service|dev overrides it.
     """
     override = os.environ.get("STOCKS_UPDATE_MODE", "").strip().lower()
     if override in ("service", "dev"):
         return override
-    pid = _service_pid()
-    return "service" if pid and pid in _ancestor_pids() else "dev"
+    return "service" if os.environ.get("INVOCATION_ID") and SERVICE_UNIT in _cgroup() else "dev"
 
 
-def build_command(previous: str, mode: str, port: int) -> list[str]:
-    return [
-        "powershell.exe", "-NoProfile", "-NonInteractive",
-        "-ExecutionPolicy", "Bypass",
-        # The script finds the repo and the service name through
-        # windows/Common.ps1, like the other service scripts.
-        "-File", str(UPDATE_SCRIPT),
-        "-PreviousCommit", previous,
-        "-Mode", mode,
-        "-StatusDir", str(Path(config.LOG_DIR)),
-        "-Port", str(port),
-    ]
+def start_unit_command() -> list[str]:
+    return ["systemctl", "start", "--no-block", UPDATE_UNIT]
 
 
 def spawn_update(previous: str, mode: str, port: int) -> None:
-    """Start update.ps1 fully detached from this process.
+    """Hand the update to stocks-update.service (pi/update.sh).
 
-    It has to outlive us: its last step restarts this server. The script
-    relaunches itself once more (stage 2) so its parent pid is a process that
-    has already exited — NSSM's stop kills the service's process *tree* by
-    parent pid, and would otherwise take the updater down mid-restart.
+    It has to outlive us: its last step restarts this server. A separate unit
+    has its own cgroup, so restarting stocks-dashboard.service never takes it
+    down; the polkit rule from pi/install.sh lets the service user start it.
     """
-    if sys.platform != "win32":
-        raise RuntimeError("the one-click updater is Windows-only (windows/update.ps1)")
-    if not UPDATE_SCRIPT.exists():
-        raise RuntimeError(f"{UPDATE_SCRIPT} is missing")
-    # DETACHED_PROCESS: no console at all (so no window, and no Ctrl-C shared
-    # with the server's console group when NSSM stops it).
-    base = subprocess.DETACHED_PROCESS | subprocess.CREATE_NEW_PROCESS_GROUP
-    kwargs = dict(cwd=str(REPO_ROOT), stdin=subprocess.DEVNULL,
-                  stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, close_fds=True)
-    cmd = build_command(previous, mode, port)
+    if mode != "service":
+        raise RuntimeError(
+            f"the one-click updater runs only under {SERVICE_UNIT} (see pi/README.md)")
+    _write_json(request_path(), {"previous_commit": previous, "port": port})
     try:
-        subprocess.Popen(cmd, creationflags=base | subprocess.CREATE_BREAKAWAY_FROM_JOB, **kwargs)
-    except OSError:
-        # The job we run in (if any) forbids breakaway; the stage-2 relaunch
-        # still orphans the real worker from our process tree.
-        subprocess.Popen(cmd, creationflags=base, **kwargs)
+        proc = subprocess.run(
+            start_unit_command(), capture_output=True, text=True,
+            timeout=SYSTEMCTL_TIMEOUT_SECONDS)
+    except (OSError, subprocess.SubprocessError) as exc:
+        raise RuntimeError(f"systemctl failed: {exc}") from exc
+    if proc.returncode != 0:
+        raise RuntimeError((proc.stderr or proc.stdout).strip() or f"could not start {UPDATE_UNIT}")

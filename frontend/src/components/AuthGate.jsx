@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { totpSetup, getOAuthProviders, getRegistrationMode, oauthStartUrl } from "../api";
+import PendingApproval from "./PendingApproval";
 import styles from "./AuthGate.module.css";
 
 const PROVIDER_LABEL = { github: "GitHub", google: "Google", facebook: "Facebook" };
@@ -134,6 +135,7 @@ function LoginRegister({ auth, busy, run }) {
         <p className={styles.hint}>
           Two-factor authentication is required — have Google or Microsoft
           Authenticator ready on your phone.
+          {signup === "approval" && " New accounts wait for the admin's approval before they can see anything."}
         </p>
       )}
     </form>
@@ -281,6 +283,9 @@ export default function AuthGate({ auth, children }) {
         {auth.status === "anon" && <LoginRegister auth={auth} busy={busy} run={run} />}
         {auth.status === "totp_required" && <TotpChallenge auth={auth} busy={busy} run={run} />}
         {auth.status === "totp_setup" && <TotpSetup auth={auth} busy={busy} run={run} />}
+        {auth.status === "pending" && (
+          <PendingApproval email={auth.user?.email} onCheck={auth.recheck} onLogout={auth.logout} />
+        )}
         <p className={styles.foot}>Signals, not predictions — your data stays on your server.</p>
       </div>
     </div>

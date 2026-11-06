@@ -40,17 +40,10 @@
 
 .stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--s-4); }
 @media (max-width: 760px) { .stats { grid-template-columns: repeat(2, 1fr); } }
-.stat { display: flex; flex-direction: column; gap: 3px; }
-.statLabel {
+.cpuLabel {
   font-family: var(--mono); font-size: 9.5px; text-transform: uppercase;
   letter-spacing: 0.07em; color: var(--text-faint);
 }
-.statValue {
-  font-family: var(--mono); font-size: 15px; font-weight: 700;
-  font-variant-numeric: tabular-nums;
-}
-.statValue[data-tone="pos"] { color: var(--positive); }
-.statValue[data-tone="neg"] { color: var(--negative); }
 
 .cpus { display: flex; flex-direction: column; gap: 6px; }
 .cpuGrid {

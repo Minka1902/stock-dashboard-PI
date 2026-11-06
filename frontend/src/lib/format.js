@@ -114,6 +114,14 @@ export function formatCount(n) {
   return n.toLocaleString("en-US");
 }
 
+// 812 KB / 4.2 MB / 1.07 GB
+export function formatBytes(n) {
+  if (n == null) return "—";
+  if (n >= 1024 ** 3) return `${(n / 1024 ** 3).toFixed(2)} GB`;
+  if (n >= 1024 ** 2) return `${(n / 1024 ** 2).toFixed(1)} MB`;
+  return `${Math.round(n / 1024)} KB`;
+}
+
 // "just now" / "2 min ago" / "3 hr ago" / locale date for older
 /**
  * Time until a FUTURE instant ("in 3 min", "overdue").

@@ -79,6 +79,10 @@ export const putServerSchedule = (source, patch) =>
   request(`/api/server/schedules/${encodeURIComponent(source)}`, { method: "PUT", body: patch });
 export const runScheduleNow = (source) =>
   request(`/api/server/schedules/${encodeURIComponent(source)}/run-now`, { method: "POST" });
+// The approval queue (STOCKS_REGISTRATION=approval), admin only.
+export const getSignups = () => getJSON("/api/server/signups");
+export const approveSignup = (id) => request(`/api/server/signups/${id}/approve`, { method: "POST" });
+export const rejectSignup = (id) => request(`/api/server/signups/${id}/reject`, { method: "POST" });
 export const getNews = () => getJSON("/api/news");
 export const getTrades = () => getJSON("/api/trades");
 export const getWatchlist = (listId) =>

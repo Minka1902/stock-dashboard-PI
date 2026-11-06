@@ -15,7 +15,11 @@ export const TYPE_ICON = {
   recommendation_change: "star",
   exit: "shield",
   risk: "shield",
+  signup: "settings",
 };
+
+// Alerts about the instance itself rather than a stock or an account.
+const SERVER_ROUTE = { kind: "view", view: "server" };
 
 export function alertIcon(type) {
   return TYPE_ICON[type] || "bell";
@@ -30,11 +34,11 @@ export function alertTypeLabel(type) {
 }
 
 /**
- * Where an alert leads: its stock's page, or — for an account-level alert
- * with no ticker (a kill-switch trip) — the Trading Bot page's Risk tab.
+ * Where an alert leads: its stock's page; a sign-up waiting for approval, the
+ * Server page; any other account-level alert with no ticker (a kill-switch
+ * trip), the Trading Bot page's Risk tab.
  */
 export function alertRoute(alert) {
-  return alert.ticker
-    ? { kind: "stock", ticker: alert.ticker, alertKey: alert.dedup_key }
-    : RISK_TAB_ROUTE;
+  if (alert.ticker) return { kind: "stock", ticker: alert.ticker, alertKey: alert.dedup_key };
+  return alert.type === "signup" ? SERVER_ROUTE : RISK_TAB_ROUTE;
 }

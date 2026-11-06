@@ -3,11 +3,14 @@ import { animate } from "animejs";
 import { AnimatePresence, motion } from "motion/react";
 import AuditChainCheck from "./AuditChainCheck";
 import Icon from "./Icon";
+import PendingSignups from "./PendingSignups";
+import PiHealth from "./PiHealth";
 import Skeleton from "./Skeleton";
 import SchedulerSection from "./SchedulerSection";
 import SourceDrawer from "./SourceDrawer";
+import Stat from "./Stat";
 import { useServerStatus } from "../hooks/useServerStatus";
-import { formatRelativeTime, formatUntil } from "../lib/format";
+import { formatBytes, formatRelativeTime, formatUntil } from "../lib/format";
 import { prefersReducedMotion } from "../lib/motionConfig";
 import { STATE_TIP, sourceState } from "../lib/sources";
 import Tooltip from "./Tooltip";
@@ -52,13 +55,6 @@ function writeFilter(filter) {
   window.history.replaceState(window.history.state, "", url.pathname + url.search + url.hash);
 }
 
-function bytes(n) {
-  if (n == null) return "—";
-  if (n >= 1024 ** 3) return `${(n / 1024 ** 3).toFixed(2)} GB`;
-  if (n >= 1024 ** 2) return `${(n / 1024 ** 2).toFixed(1)} MB`;
-  return `${Math.round(n / 1024)} KB`;
-}
-
 function duration(seconds) {
   if (seconds == null) return "—";
   const s = Math.floor(seconds);
@@ -91,15 +87,6 @@ function Meter({ value, label }) {
         <span ref={ref} className={styles.meterFill} data-hot={(value ?? 0) > 85 ? "yes" : "no"} />
       </span>
     </Tooltip>
-  );
-}
-
-function Stat({ label, value, tone }) {
-  return (
-    <div className={styles.stat}>
-      <span className={styles.statLabel}>{label}</span>
-      <span className={styles.statValue} data-tone={tone}>{value}</span>
-    </div>
   );
 }
 
@@ -164,17 +151,17 @@ export default function ServerPanel() {
               value={overview.scheduler?.running ? "running" : "stopped"}
               tone={overview.scheduler?.running ? "pos" : "neg"}
             />
-            <Stat label="Database" value={bytes(overview.db?.size_bytes)} />
+            <Stat label="Database" value={formatBytes(overview.db?.size_bytes)} />
             <Stat
               label="WAL"
-              value={bytes(overview.db?.wal_bytes)}
+              value={formatBytes(overview.db?.wal_bytes)}
               tone={overview.db?.wal_bytes > 50 * 1024 * 1024 ? "neg" : undefined}
             />
           </div>
 
           {proc.available ? (
             <div className={styles.stats}>
-              <Stat label="Memory (RSS)" value={bytes(proc.rss_bytes)} />
+              <Stat label="Memory (RSS)" value={formatBytes(proc.rss_bytes)} />
               <Stat label="Threads" value={proc.num_threads} />
               <Stat label="Open files" value={proc.open_files} />
               <Stat label="System memory" value={sys.mem_percent != null ? `${sys.mem_percent.toFixed(0)}%` : "—"} />
@@ -189,7 +176,7 @@ export default function ServerPanel() {
 
           {proc.available && sys.per_cpu?.length > 0 && (
             <div className={styles.cpus}>
-              <span className={styles.statLabel}>CPU {sys.cpu_percent?.toFixed(0)}%</span>
+              <span className={styles.cpuLabel}>CPU {sys.cpu_percent?.toFixed(0)}%</span>
               <div className={styles.cpuGrid}>
                 {sys.per_cpu.map((v, i) => (
                   <Meter key={i} value={v} label={`core ${i}`} />
@@ -198,6 +185,23 @@ export default function ServerPanel() {
             </div>
           )}
         </div>
+      </section>
+
+      {/* ---- the machine underneath: power, heat, disk, backups, network ---- */}
+      <section className={styles.panel}>
+        <div className={styles.head}>
+          <span className="caption">Raspberry Pi</span>
+          <span className={styles.headRight} data-tone={overview.network?.online === false ? "neg" : "pos"}>
+            {overview.network?.online === false ? "offline" : "online"}
+            {overview.network?.since ? ` since ${formatRelativeTime(overview.network.since)}` : ""}
+          </span>
+        </div>
+        <PiHealth pi={overview.pi} network={overview.network} />
+      </section>
+
+      <section className={styles.panel}>
+        <div className={styles.head}><span className="caption">Sign-ups waiting for approval</span></div>
+        <PendingSignups />
       </section>
 
       {/* ---- what it's doing this second, and what is waiting its turn ---- */}

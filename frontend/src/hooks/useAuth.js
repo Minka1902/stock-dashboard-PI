@@ -1,7 +1,11 @@
 import { useCallback, useEffect, useState } from "react";
 import * as api from "../api";
 
-// status: "loading" | "anon" | "totp_setup" | "totp_required" | "authed"
+// A signed-in account still in the approval queue sees the waiting screen,
+// not the app (its API calls would all be 403).
+const statusFor = (u) => (u?.approved === false ? "pending" : "authed");
+
+// status: "loading" | "anon" | "totp_setup" | "totp_required" | "pending" | "authed"
 export default function useAuth() {
   const [status, setStatus] = useState("loading");
   const [user, setUser] = useState(null);
@@ -9,7 +13,7 @@ export default function useAuth() {
   useEffect(() => {
     let alive = true;
     api.getMe()
-      .then((u) => { if (alive) { setUser(u); setStatus("authed"); } })
+      .then((u) => { if (alive) { setUser(u); setStatus(statusFor(u)); } })
       .catch(() => { if (alive) setStatus("anon"); });
     return () => { alive = false; };
   }, []);
@@ -39,8 +43,16 @@ export default function useAuth() {
   const verifyTotp = useCallback(async (code) => {
     const r = await api.totpVerify(code);
     setUser(r.user);
-    setStatus("authed");
+    setStatus(statusFor(r.user));
     return r;
+  }, []);
+
+  // Re-read the account (the waiting screen polls this until it is approved).
+  const recheck = useCallback(async () => {
+    const u = await api.getMe();
+    setUser(u);
+    setStatus(statusFor(u));
+    return u;
   }, []);
 
   // Returns {user, recovery_codes}; caller shows the codes before continuing,
@@ -51,12 +63,12 @@ export default function useAuth() {
     return r;
   }, []);
 
-  const finishSetup = useCallback(() => setStatus("authed"), []);
+  const finishSetup = useCallback(() => setStatus(statusFor(user)), [user]);
 
   const useRecovery = useCallback(async (code) => {
     const r = await api.useRecoveryCode(code);
     setUser(r.user);
-    setStatus("authed");
+    setStatus(statusFor(r.user));
     return r;
   }, []);
 
@@ -83,6 +95,6 @@ export default function useAuth() {
   return {
     status, user,
     login, register, verifyTotp, enableTotp, finishSetup, useRecovery, logout, cancel,
-    markOnboarded,
+    markOnboarded, recheck,
   };
 }

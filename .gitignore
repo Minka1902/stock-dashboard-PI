@@ -9,3 +9,5 @@ logs/
 
 # The Pi's secrets file (pi/stocks.env.example is the tracked template).
 pi/stocks.env
+
+__pycache__/

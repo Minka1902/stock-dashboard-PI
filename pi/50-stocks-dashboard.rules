@@ -1,0 +1,18 @@
+// Installed to /etc/polkit-1/rules.d/ by pi/install.sh.
+// The dashboard runs as "stocks" and may do exactly two things with systemd:
+// start the update unit (Info -> Updates) and, from inside that update,
+// restart the dashboard itself. Nothing else.
+polkit.addRule(function (action, subject) {
+    if (action.id !== "org.freedesktop.systemd1.manage-units" || subject.user !== "stocks") {
+        return polkit.Result.NOT_HANDLED;
+    }
+    var unit = action.lookup("unit");
+    var verb = action.lookup("verb");
+    if (unit === "stocks-update.service" && verb === "start") {
+        return polkit.Result.YES;
+    }
+    if (unit === "stocks-dashboard.service" && (verb === "restart" || verb === "start")) {
+        return polkit.Result.YES;
+    }
+    return polkit.Result.NOT_HANDLED;
+});

@@ -1,0 +1,10 @@
+[Unit]
+Description=Restart the Stock Signal Dashboard when its health check keeps failing
+After=stocks-dashboard.service
+
+[Service]
+Type=oneshot
+ExecStart=/opt/stocks-dashboard/pi/healthcheck.sh
+# Holds the consecutive-failure counter between runs.
+RuntimeDirectory=stocks-healthcheck
+RuntimeDirectoryPreserve=yes

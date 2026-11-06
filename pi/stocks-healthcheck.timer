@@ -1,0 +1,11 @@
+[Unit]
+Description=Check the Stock Signal Dashboard's health every 2 minutes
+
+[Timer]
+# A Pi 3 needs a while to import the app after boot.
+OnBootSec=5min
+OnUnitActiveSec=2min
+AccuracySec=15s
+
+[Install]
+WantedBy=timers.target

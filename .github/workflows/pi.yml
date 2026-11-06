@@ -1,0 +1,88 @@
+name: pi
+
+# The Raspberry Pi never builds anything heavy: the backend suite runs here on
+# the Pi's architecture (aarch64, Python 3.13 like Raspberry Pi OS Trixie), and
+# every push to main publishes the built web app to the web-dist branch as one
+# commit "source: <main sha>", which pi/update.py and pi/install.sh download.
+# Publishing waits for both checks, so a commit that fails them never gets a
+# web app and the Pi's updater refuses to install it.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  backend:
+    runs-on: ubuntu-24.04-arm
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+          cache: pip
+          cache-dependency-path: backend/requirements.txt
+      - name: Install (every pin must have an aarch64 wheel or build here)
+        working-directory: backend
+        run: pip install -r requirements.txt
+      - name: Test
+        working-directory: backend
+        run: python -m pytest -q
+
+  web:
+    runs-on: ubuntu-24.04
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - run: npm ci
+      - run: npm run lint
+      - run: npm run build
+      - uses: actions/upload-artifact@v4
+        with:
+          name: dist
+          path: frontend/dist
+          retention-days: 7
+
+  web-dist:
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    needs: [backend, web]
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+    concurrency:
+      group: web-dist
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: dist
+          path: ${{ runner.temp }}/dist
+      - name: Commit the build to web-dist
+        env:
+          DIST: ${{ runner.temp }}/dist
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          if git fetch --depth=1 origin web-dist; then
+            git checkout -q -B web-dist FETCH_HEAD
+          else
+            git checkout -q --orphan web-dist
+          fi
+          git rm -rqf --ignore-unmatch .
+          git clean -fdxq
+          cp -r "$DIST"/. .
+          git add -A
+          git commit -q -m "source: $GITHUB_SHA"
+          git push -q origin web-dist

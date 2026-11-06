@@ -1,0 +1,14 @@
+[Unit]
+Description=Stock Signal Dashboard one-click update (started from Info -> Updates)
+Documentation=file:///opt/stocks-dashboard/pi/README.md
+
+[Service]
+# Its own unit, so the restart it performs doesn't kill it. Started by the
+# dashboard (as the stocks user) through the polkit rule from install.sh.
+Type=oneshot
+User=stocks
+Group=stocks
+EnvironmentFile=/etc/stocks-dashboard/stocks.env
+EnvironmentFile=/etc/stocks-dashboard/install.env
+ExecStart=/usr/bin/python3 /opt/stocks-dashboard/pi/update.py apply
+TimeoutStartSec=30min

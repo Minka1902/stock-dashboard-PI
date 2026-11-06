@@ -102,6 +102,10 @@ def connect(db_path: str) -> sqlite3.Connection:
     # WAL lets readers proceed while a write is in flight; busy_timeout keeps
     # a briefly-locked DB from surfacing as an exception under load.
     conn.execute("PRAGMA journal_mode=WAL")
+    # NORMAL is crash-safe in WAL mode (a power cut can lose the last commits,
+    # never corrupt the file) and syncs far less than FULL: less SD-card wear
+    # and less write latency on the Pi.
+    conn.execute("PRAGMA synchronous=NORMAL")
     # 15s, not 5s: the request and refresh connections share the file's write
     # lock, and a long ingestion write during a poll-heavy page was enough to
     # surface "database is locked" to the UI.

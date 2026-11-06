@@ -37,6 +37,7 @@ from app import alerts as alerts_source
 from app.logging_config import setup_logging
 from app.version import __version__
 from app import automute, model_version, routes_broker, regime, routes_analytics, routes_chart, routes_investors, routes_lots, routes_paper, routes_risk, routes_rules, routes_scanner, routes_telegram, routes_timemachine, routes_update, rule_source, scanner, telegram, updater
+from app import backup, netwatch, pihealth
 
 # Optional: the Server page degrades to "unavailable" rather than reporting
 # zeros, which would look identical to a genuinely idle machine.
@@ -482,13 +483,23 @@ def _run_derived() -> None:
         ingest.run_source(refresh_conn, name, spec.fetch, spec.store)
 
 
+def _offline_fetch():
+    raise ingest.SourceDeferred(netwatch.OFFLINE_REASON, config.NETCHECK_OFFLINE_RETRY_SECONDS)
+
+
 def _run_source_now(name: str) -> None:
-    """Run one source (or the derived step) and let its outcome set its clock."""
+    """Run one source (or the derived step) and let its outcome set its clock.
+
+    While netwatch says the network is down, a source records one deferral
+    instead of an error per run; _netwatch re-arms it when the network is back.
+    The derived step only reads the DB, so it always runs.
+    """
     if name == schedules.DERIVED:
         _run_derived()
         return
     spec = SOURCES[name]
-    result = ingest.run_source(refresh_conn, name, spec.fetch, spec.store)
+    fetch = spec.fetch if netwatch.is_online() else _offline_fetch
+    result = ingest.run_source(refresh_conn, name, fetch, spec.store)
     try:
         _after_run(name, result)
     except Exception:  # noqa: BLE001 - bookkeeping must never fail the run
@@ -717,7 +728,7 @@ def _run_daily_analysis():
 
 # Minute-cadence jobs: a row per run would be ~1,400 a day of noise, so only
 # their errors (and late starts) are recorded.
-_QUIET_JOBS = {"bots", "exits", "telegram"}
+_QUIET_JOBS = {"bots", "exits", "telegram", "netwatch"}
 
 _JOB_EVENT_NAMES = {
     EVENT_JOB_EXECUTED: "executed",
@@ -792,6 +803,35 @@ def _prune_history():
         logger.exception("history prune failed")
 
 
+def _netwatch() -> None:
+    """Probe the network; on a flip, record it, and when it is back re-arm
+    every source deferred for the outage (staggered, in registry order)."""
+    back = netwatch.check()
+    if back is None:
+        return
+    if not back:
+        detail = (f"network offline (no TCP connect to {', '.join(config.NETCHECK_HOSTS)}); "
+                  "network sources defer and the minute jobs wait until it is back")
+    else:
+        offline_status = f"deferred: {netwatch.OFFLINE_REASON}"
+        names = [s.source for s in db.get_source_statuses(refresh_conn)
+                 if s.status == offline_status]
+        now = datetime.now(timezone.utc)
+        order = [n for n in _schedule_names() if n in names]
+        for i, name in enumerate(order):
+            _set_next_run(_job_id(name), now + timedelta(seconds=i + 1))
+        detail = f"network back online; re-armed {len(order)} deferred source(s)" + (
+            f": {', '.join(order)}" if order else "")
+    logger.warning(detail)
+    db.record_job_run(refresh_conn, "netwatch", "executed", _now_iso(), detail=detail)
+
+
+def _when_online(fn):
+    """Minute jobs that need live quotes or Telegram wait out an outage; the
+    netwatch job_runs rows record when and why."""
+    return lambda: netwatch.is_online() and fn()
+
+
 def _now_iso() -> str:
     return datetime.now(timezone.utc).isoformat(timespec="seconds")
 
@@ -824,10 +864,15 @@ async def lifespan(app: FastAPI):
     )
     _add_timed_job(
         _run_daily_analysis, analysis_trigger(db.get_app_settings(conn)), "daily_analysis")
+    # Verified online copy of the DB, kept BACKUP_KEEP deep (app/backup.py).
+    _add_timed_job(
+        lambda: backup.run(refresh_conn),
+        CronTrigger(hour=config.BACKUP_HOUR, minute=config.BACKUP_MINUTE),
+        "db_backup")
     # Demo trading bots: every minute, held back like the source jobs so a
     # restart (or a test lifespan) never trades before the app has settled.
     _add_timed_job(
-        lambda: bots.run(refresh_conn),
+        _when_online(lambda: bots.run(refresh_conn)),
         IntervalTrigger(
             seconds=config.BOT_INTERVAL_SECONDS,
             start_date=datetime.now(timezone.utc)
@@ -836,7 +881,8 @@ async def lifespan(app: FastAPI):
     # Exit rules on holdings and resting paper orders: same minute cadence and
     # the same hold-back.
     _add_timed_job(
-        lambda: (execution.poll(refresh_conn), exits.run(refresh_conn), execution.sync_broker(refresh_conn)),
+        _when_online(lambda: (execution.poll(refresh_conn), exits.run(refresh_conn),
+                              execution.sync_broker(refresh_conn))),
         IntervalTrigger(
             seconds=config.EXITS_INTERVAL_SECONDS,
             start_date=datetime.now(timezone.utc)
@@ -845,12 +891,21 @@ async def lifespan(app: FastAPI):
     # Telegram: answer commands and send queued bot fills (only with a token).
     if telegram.configured():
         _add_timed_job(
-            lambda: telegram.poll(refresh_conn),
+            _when_online(lambda: telegram.poll(refresh_conn)),
             IntervalTrigger(
                 seconds=config.TELEGRAM_POLL_SECONDS,
                 start_date=datetime.now(timezone.utc)
                 + timedelta(seconds=config.SCHEDULER_STARTUP_DELAY_SECONDS)),
             "telegram")
+    # Connectivity probe. Default executor, not the serial "refresh" one, so a
+    # fetch hanging on a dead network can't delay noticing the outage.
+    scheduler.add_job(
+        _netwatch,
+        IntervalTrigger(
+            seconds=config.NETCHECK_INTERVAL_SECONDS,
+            start_date=datetime.now(timezone.utc)
+            + timedelta(seconds=config.SCHEDULER_STARTUP_DELAY_SECONDS)),
+        id="netwatch", name="netwatch", replace_existing=True)
     # 6-hourly GitHub update check. Runs on the default executor, not the
     # serial "refresh" one: it only shells out to git and never touches SQLite.
     updater.schedule(scheduler)
@@ -957,11 +1012,18 @@ async def _unhandled_exception(request: Request, exc: Exception):
 def health():
     """Cheap liveness probe. Public, and always HTTP 200 by design.
 
-    start.ps1 polls this to decide the app came up, so a degraded subsystem must
-    not read as "failed to start" — the status field carries that instead.
+    pi/update.sh polls this to decide the app came up, so a degraded subsystem
+    must not read as "failed to start" — the status field carries that instead;
+    pi/healthcheck.sh restarts the service after repeated non-ok answers.
     Detailed diagnostics live behind the admin-only /api/server/* routes.
+
+    `refresh_thread`: everything runs on one serial thread, so a fetch running,
+    or work waiting, longer than HEALTH_STUCK_SECONDS means something hung.
     """
-    checks = {"db": False, "scheduler": scheduler.running}
+    busiest = max([*ingest.running_sources().values(),
+                   *(e["waiting_seconds"] for e in _queued_snapshot())], default=0)
+    checks = {"db": False, "scheduler": scheduler.running,
+              "refresh_thread": busiest < config.HEALTH_STUCK_SECONDS}
     try:
         conn.execute("SELECT 1").fetchone()
         checks["db"] = True
@@ -2221,6 +2283,8 @@ def server_overview(user=Depends(_require_admin)):
         "running_sources": ingest.running_sources(),
         # ...and what is waiting its turn on the single refresh thread.
         "queued": _queued_snapshot(),
+        "network": netwatch.state(),
+        "pi": pihealth.snapshot(),
     }
 
 

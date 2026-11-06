@@ -5,9 +5,9 @@ from pathlib import Path
 
 # SQLite file location (one file, no server). Defaults to backend/stocks.db,
 # resolved from this file rather than the cwd — the same way LOG_DIR below is.
-# A bare relative default only worked because every launcher happened to chdir
-# to backend/ first; a Windows service starts in C:\Windows\system32, where the
-# relative path would silently create a second, empty database.
+# A cwd-relative default would silently create a second, empty database
+# whenever the process starts somewhere else. On the Pi, pi/stocks.env points
+# it at /var/lib/stocks-dashboard/db/stocks.db.
 DB_PATH = os.environ.get("STOCKS_DB_PATH") or str(
     Path(__file__).resolve().parents[1] / "stocks.db")
 
@@ -15,10 +15,8 @@ DB_PATH = os.environ.get("STOCKS_DB_PATH") or str(
 LOG_LEVEL = os.environ.get("STOCKS_LOG_LEVEL", "INFO")
 
 # Where the rotating log file lives. Defaults to backend/logs/ (this file is
-# backend/app/config.py, so parents[1] is backend/). Logging to a file at all is
-# the point: uvicorn is launched detached and minimized, so a stderr-only setup
-# loses every traceback the moment the console window goes away — which is
-# exactly what made the last unexplained shutdown impossible to diagnose.
+# backend/app/config.py, so parents[1] is backend/); the Pi uses
+# /var/log/stocks-dashboard. The updater's status and request files live here too.
 LOG_DIR = Path(os.environ.get("STOCKS_LOG_DIR") or (Path(__file__).resolve().parents[1] / "logs"))
 LOG_MAX_BYTES = int(os.environ.get("STOCKS_LOG_MAX_BYTES", str(5 * 1024 * 1024)))
 LOG_BACKUP_COUNT = int(os.environ.get("STOCKS_LOG_BACKUP_COUNT", "5"))
@@ -46,6 +44,31 @@ SCHEDULE_DEFAULT_TZ = os.environ.get("STOCKS_SCHEDULE_TZ", "Asia/Jerusalem")
 SOURCE_RUN_RETENTION_DAYS = int(os.environ.get("STOCKS_SOURCE_RUN_RETENTION_DAYS", "30"))
 JOB_RUN_RETENTION_DAYS = int(os.environ.get("STOCKS_JOB_RUN_RETENTION_DAYS", "90"))
 BOOM_HISTORY_RETENTION_DAYS = int(os.environ.get("STOCKS_BOOM_HISTORY_RETENTION_DAYS", "400"))
+
+# --- Running unattended on the Pi ---
+# /api/health reports "degraded" once work has waited this long for the single
+# refresh thread (the job in front of it hung); pi/healthcheck.sh then restarts.
+HEALTH_STUCK_SECONDS = int(os.environ.get("STOCKS_HEALTH_STUCK_SECONDS", "1800"))
+# Nightly online backup (db_backup job). Point the directory at a USB stick so
+# a dead SD card doesn't take the backups with it.
+BACKUP_DIR = Path(os.environ.get("STOCKS_BACKUP_DIR") or (Path(DB_PATH).parent / "backups"))
+BACKUP_KEEP = int(os.environ.get("STOCKS_BACKUP_KEEP", "7"))
+BACKUP_HOUR = int(os.environ.get("STOCKS_BACKUP_HOUR", "3"))
+BACKUP_MINUTE = int(os.environ.get("STOCKS_BACKUP_MINUTE", "47"))
+# Connectivity probe (app/netwatch.py): plain TCP connects, no DNS, so a DNS
+# outage still reads as online and surfaces as honest source errors instead.
+NETCHECK_HOSTS = [
+    h.strip() for h in os.environ.get("STOCKS_NETCHECK_HOSTS", "1.1.1.1:443,8.8.8.8:53").split(",")
+    if h.strip()
+]
+NETCHECK_INTERVAL_SECONDS = int(os.environ.get("STOCKS_NETCHECK_INTERVAL_SECONDS", "30"))
+NETCHECK_TIMEOUT_SECONDS = float(os.environ.get("STOCKS_NETCHECK_TIMEOUT_SECONDS", "3"))
+# How long an offline deferral waits if netwatch itself never sees the network
+# come back (it normally re-arms the deferred sources the moment it does).
+NETCHECK_OFFLINE_RETRY_SECONDS = int(os.environ.get("STOCKS_NETCHECK_OFFLINE_RETRY_SECONDS", "3600"))
+# Raspberry Pi firmware flags (under-voltage, throttling); absent off a Pi.
+PI_THROTTLED_PATH = os.environ.get(
+    "STOCKS_PI_THROTTLED_PATH", "/sys/devices/platform/soc/soc:firmware/get_throttled")
 
 # --- Web security ---
 # Comma-separated list of allowed browser origins. Because the session cookie

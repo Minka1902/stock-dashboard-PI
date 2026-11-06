@@ -12,8 +12,8 @@ computed at read time vs the same month a year earlier.
 """
 import asyncio
 import io
-import os
 import re
+import shutil
 import sys
 import time
 from datetime import datetime
@@ -178,8 +178,11 @@ def parse_workbook(content: bytes) -> list[MarginDebtPoint]:
 # If Cloudflare ever escalates to an interactive challenge, this tier fails
 # with the page title in the error rather than working around it.
 
-_INSTALL_CMD = r".venv\Scripts\python.exe -m playwright install chromium"
+_INSTALL_CMD = "sudo apt install chromium (or: backend/.venv/bin/python -m playwright install chromium)"
 _NOT_INSTALLED = "headless browser not installed — run: "
+# Keep one renderer, no GPU and no /dev/shm (64 MB on a Pi): the difference
+# between fitting in a Pi 3's 1 GB next to the server and being OOM-killed.
+_LAUNCH_ARGS = ["--disable-gpu", "--disable-dev-shm-usage", "--renderer-process-limit=1"]
 
 # Challenge interstitials ("Just a moment...") clear themselves; the hard block
 # page ("Attention Required! | Cloudflare") never does. Either way we wait for
@@ -205,14 +208,10 @@ def _browser_user_agent(version: str) -> str:
             f"(KHTML, like Gecko) Chrome/{major}.0.0.0 Safari/537.36")
 
 
-def _install_hint() -> str:
-    hint = _NOT_INSTALLED + _INSTALL_CMD
-    browsers_path = os.environ.get("PLAYWRIGHT_BROWSERS_PATH")
-    if browsers_path:
-        # The Windows service installs browsers machine-wide; a plain install
-        # would land in the installing user's profile, which LocalSystem can't see.
-        hint += f" (with PLAYWRIGHT_BROWSERS_PATH={browsers_path} set)"
-    return hint
+def chromium_path() -> str | None:
+    """The browser to launch: STOCKS_CHROMIUM_PATH, the system chromium, or
+    None for Playwright's own download."""
+    return config.CHROMIUM_PATH or shutil.which("chromium") or shutil.which("chromium-browser")
 
 
 def _import_playwright():
@@ -221,7 +220,7 @@ def _import_playwright():
         import playwright.async_api as api
     except ImportError:
         raise RuntimeError(
-            _NOT_INSTALLED + r".venv\Scripts\python.exe -m pip install playwright, then "
+            _NOT_INSTALLED + "backend/.venv/bin/pip install playwright, then "
             + _INSTALL_CMD) from None
     return api
 
@@ -231,7 +230,7 @@ def describe_browser_error(exc: BaseException) -> str:
     turn 'no browser binary' into the command that fixes it."""
     msg = str(exc)
     if "Executable doesn't exist" in msg or "playwright install" in msg:
-        return _install_hint()
+        return _NOT_INSTALLED + _INSTALL_CMD
     first = next((ln.strip() for ln in msg.splitlines() if ln.strip()), type(exc).__name__)
     return first[:300]
 
@@ -249,7 +248,8 @@ async def _browser_session(api, timeout_s: float) -> tuple[str, bytes | None, st
         return ms
 
     async with api.async_playwright() as pw:
-        browser = await pw.chromium.launch(headless=True, timeout=left_ms())
+        browser = await pw.chromium.launch(
+            headless=True, timeout=left_ms(), executable_path=chromium_path(), args=_LAUNCH_ARGS)
         try:
             context = await browser.new_context(
                 user_agent=_browser_user_agent(browser.version),
@@ -288,12 +288,9 @@ async def _browser_session(api, timeout_s: float) -> tuple[str, bytes | None, st
 
 
 def _run_browser_session(api, timeout_s: float) -> tuple[str, bytes | None, str | None]:
-    # An explicit loop, not sync_playwright(): the sync API builds its loop from
-    # the global policy, and `uvicorn --reload` on Windows installs
-    # WindowsSelectorEventLoopPolicy, whose loops cannot spawn the browser
-    # subprocess (NotImplementedError). Proactor always can. Runs on the
-    # scheduler/refresh worker thread, which has no loop of its own.
-    loop = asyncio.ProactorEventLoop() if sys.platform == "win32" else asyncio.new_event_loop()
+    # Its own loop: this runs on the scheduler/refresh worker thread, which has
+    # no event loop of its own.
+    loop = asyncio.new_event_loop()
     try:
         # Hard ceiling on top of the per-step budgets (launch/close overheads).
         return loop.run_until_complete(

@@ -351,18 +351,24 @@ def test_missing_playwright_package_is_a_clear_error(monkeypatch):
     assert "playwright install chromium" in msg
 
 
-def test_missing_browser_binary_maps_to_the_install_command(monkeypatch):
-    monkeypatch.delenv("PLAYWRIGHT_BROWSERS_PATH", raising=False)
+def test_missing_browser_binary_maps_to_the_install_command():
     exc = Exception(
-        "BrowserType.launch: Executable doesn't exist at C:/pw/chrome.exe\n"
+        "BrowserType.launch: Executable doesn't exist at /root/.cache/ms-playwright/chrome\n"
         "╔════╗\n║ Looks like Playwright was just installed ║")
     assert margin_debt.describe_browser_error(exc) == (
-        "headless browser not installed — run: "
-        r".venv\Scripts\python.exe -m playwright install chromium")
+        "headless browser not installed — run: sudo apt install chromium "
+        "(or: backend/.venv/bin/python -m playwright install chromium)")
 
-    monkeypatch.setenv("PLAYWRIGHT_BROWSERS_PATH", r"C:\ProgramData\SignalDashboard\ms-playwright")
-    assert r"PLAYWRIGHT_BROWSERS_PATH=C:\ProgramData\SignalDashboard\ms-playwright" in \
-        margin_debt.describe_browser_error(exc)
+
+def test_chromium_path_prefers_the_setting_then_the_system_browser(monkeypatch):
+    monkeypatch.setattr(margin_debt.config, "CHROMIUM_PATH", "/opt/chromium/chrome")
+    assert margin_debt.chromium_path() == "/opt/chromium/chrome"
+    monkeypatch.setattr(margin_debt.config, "CHROMIUM_PATH", "")
+    monkeypatch.setattr(margin_debt.shutil, "which",
+                        lambda name: "/usr/bin/chromium" if name == "chromium" else None)
+    assert margin_debt.chromium_path() == "/usr/bin/chromium"
+    monkeypatch.setattr(margin_debt.shutil, "which", lambda name: None)
+    assert margin_debt.chromium_path() is None
 
 
 def test_browser_launch_failure_is_reported_not_raised_raw(monkeypatch):

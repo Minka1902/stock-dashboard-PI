@@ -295,10 +295,14 @@ MARGIN_DEBT_MIN_INTERVAL_SECONDS = int(
     os.environ.get("STOCKS_MARGIN_DEBT_MIN_INTERVAL_SECONDS", str(7 * 86400))
 )
 # Total budget for the headless-browser tier (launch + page + Cloudflare
-# clearance + workbook download), in seconds.
+# clearance + workbook download), in seconds. Sized for a Raspberry Pi 3, whose
+# Cortex-A53 needs most of a minute just to start Chromium and run the challenge.
 MARGIN_DEBT_BROWSER_TIMEOUT_SECONDS = float(
-    os.environ.get("STOCKS_MARGIN_DEBT_BROWSER_TIMEOUT_SECONDS", "60")
+    os.environ.get("STOCKS_MARGIN_DEBT_BROWSER_TIMEOUT_SECONDS", "180")
 )
+# Chromium binary for that tier. Empty = the system `chromium` (apt) on PATH,
+# else the browser Playwright downloaded itself (`playwright install chromium`).
+CHROMIUM_PATH = os.environ.get("STOCKS_CHROMIUM_PATH", "")
 # Retry cadence after a *failed* fetch, which is a different question from how
 # often fresh data appears: a week-long success interval must not become a
 # week-long outage when FINRA returns a 401/403.
